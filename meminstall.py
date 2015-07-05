@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """We list all the packages we install on our system in a single file
 (one for each package manager: one for debian packages, another for
@@ -49,11 +50,11 @@ def get_diff(cached_list, curr_list):
 
 def sync_packages():
     # Get the previous state
-    cached = expanduser(join(CONF, APT_FILE))
-    if os.path.isfile(cached):
-        with open(cached, "rb") as f:
+    cached_f = expanduser(join(CONF, APT_FILE))
+    if os.path.isfile(cached_f):
+        with open(cached_f, "rb") as f:
             lines = f.readlines()
-        cached_list = get_packages(lines)
+        cached_f_list = get_packages(lines)
     else:
         print "No cache. Will initialize."
         cache_init(prev_file)
@@ -69,12 +70,16 @@ def sync_packages():
         print "mmh. We don't find the package list at {}.".format(curr_f)
 
     # Diff: which are new, which are to be deleted ?
-    to_install, to_delete = get_diff(cached_list, curr_list)
+    to_install, to_delete = get_diff(cached_f_list, curr_list)
     print "Found {} packages to delete: {}".format(len(to_delete), to_delete)
     print "Found {} packages to install: {}".format(len(to_install), to_install)
 
     # Run the package managers.
-    import ipdb; ipdb.set_trace()
+    if to_install or to_delete:
+        go = raw_input("Install packages ? [Y/n]")
+        if go in ["y", "yes", "o", ""]:
+            os.system("sudo apt-get install " + " ".join(to_install))
+            shutil.copyfile(curr_f, cached_f)
 
 
 def check_conf_dir(conf=CONF):

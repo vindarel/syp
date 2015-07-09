@@ -15,21 +15,25 @@ program to add the package name to the right file.
 
 import sys
 import shutil
+import operator
 import os
 from os.path import join, expanduser
 
-DEPS_DIR = "~/dotfiles/requirements/"
-APT_FILE = "apt-all.txt"
+DEPS_ROOT_DIR = "~/dotfiles/requirements/"
+REQUIREMENTS_FILES = {
+    "APT": "apt-all.txt",
+    "NPM": "npm-requirements.txt",
+}
 
 CONF = "~/.meminstall/"
 
 SYSTEM_PACMAN = "apt-get"
 
-def cache_init(prev_file, APT_FILE=APT_FILE):
+def cache_init(req_file):
     """Copy the package listings to the conf cache.
     """
-    curr_apt = join(expanduser(DEPS_DIR), APT_FILE)
-    cache_apt = join(expanduser(CONF), APT_FILE)
+    curr_apt = join(expanduser(DEPS_ROOT_DIR), req_file)
+    cache_apt = join(expanduser(CONF), req_file)
     shutil.copyfile(curr_apt, cache_apt)
 
 def get_packages(lines):
@@ -48,20 +52,32 @@ def get_diff(cached_list, curr_list):
     to_delete = list(set(cached_list) - set(curr_list))
     return (to_install, to_delete)
 
-def sync_packages():
+def get_shell_cmd(req_file):
+    """Form the shell command with the right package manager.
+    It must be ready to append the packages list.
+    """
+    pacman = "apt-get install -y"
+    if req_file == REQUIREMENTS_FILES["NPM"]:
+        pacman = "npm install -g"
+
+    cmd = "sudo {}".format(pacman)
+    return cmd
+
+def sync_packages(req_file):
     # Get the previous state
-    cached_f = expanduser(join(CONF, APT_FILE))
+    cached_f = expanduser(join(CONF, req_file))
+    cached_f_list = []
     if os.path.isfile(cached_f):
         with open(cached_f, "rb") as f:
             lines = f.readlines()
         cached_f_list = get_packages(lines)
     else:
-        print "No cache. Will initialize."
-        cache_init(prev_file)
+        print "No cache. Will initialize for {}.".format(req_file)
+        cache_init(req_file)
 
-    # Get the current package liste.
+    # Get the current package list.
     curr_list = []
-    curr_f = expanduser(join(DEPS_DIR, APT_FILE))
+    curr_f = expanduser(join(DEPS_ROOT_DIR, req_file))
     if os.path.isfile(curr_f):
         with open(curr_f, "rb") as f:
             lines = f.readlines()
@@ -71,6 +87,7 @@ def sync_packages():
 
     # Diff: which are new, which are to be deleted ?
     to_install, to_delete = get_diff(cached_f_list, curr_list)
+    print "In {}:".format(req_file)
     print "Found {} packages to delete: {}".format(len(to_delete), to_delete)
     print "Found {} packages to install: {}".format(len(to_install), to_install)
 
@@ -78,8 +95,14 @@ def sync_packages():
     if to_install or to_delete:
         go = raw_input("Install packages ? [Y/n]")
         if go in ["y", "yes", "o", ""]:
-            os.system("sudo apt-get install " + " ".join(to_install))
+            cmd = get_shell_cmd(req_file)
+            cmd = " ".join([cmd] + to_install)
+            os.system(cmd)
+            # TODO: don't copy if exited with error.
             shutil.copyfile(curr_f, cached_f)
+
+    # xxx: return codes
+    return 0
 
 
 def check_conf_dir(conf=CONF):
@@ -91,7 +114,8 @@ def check_conf_dir(conf=CONF):
 
 def main():
     check_conf_dir()
-    return sync_packages()
+    ret_cods = map(sync_packages, REQUIREMENTS_FILES.values())
+    return reduce(operator.or_, ret_cods)
 
 if __name__ == "__main__":
     exit(main())

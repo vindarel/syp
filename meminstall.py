@@ -37,6 +37,8 @@ def cache_init(req_file):
     shutil.copyfile(curr_apt, cache_apt)
 
 def get_packages(lines):
+    """Get rid of comments. Return the packages list.
+    """
     packages = []
     for line in lines:
         if (not line.startswith('#')) and (line.strip()):
@@ -63,27 +65,47 @@ def get_shell_cmd(req_file):
     cmd = "sudo {}".format(pacman)
     return cmd
 
+def run_package_manager(to_install, to_delete, req_file):
+    """Run the right package manager. Install and delete packages.
+    """
+    if to_install or to_delete:
+        go = raw_input("Install packages ? [Y/n]")
+        if go in ["y", "yes", "o", ""]:
+            cmd = get_shell_cmd(req_file)
+            cmd = " ".join([cmd] + to_install)
+            os.system(cmd)
+            # TODO: don't copy if exited with error.
+            # xxx: return codes
+            shutil.copyfile(curr_f, cached_f)
+
 def sync_packages(req_file):
+
+    def check_file_and_get_package_list(afile, create_cache=False):
+        """From a given file, read its package list.
+        Create the cache file if appropriate.
+        """
+        packages = []
+        if os.path.isfile(afile):
+            with open(afile, "rb") as f:
+                lines = f.readlines()
+            packages = get_packages(lines)
+        else:
+            if create_cache:
+                print "No cache. Will initialize for {}.".format(req_file)
+                cache_init(req_file)
+            else:
+                print "We don't find the package list at {}.".format(afile)
+
+        return packages
+
     # Get the previous state
     cached_f = expanduser(join(CONF, req_file))
-    cached_f_list = []
-    if os.path.isfile(cached_f):
-        with open(cached_f, "rb") as f:
-            lines = f.readlines()
-        cached_f_list = get_packages(lines)
-    else:
-        print "No cache. Will initialize for {}.".format(req_file)
-        cache_init(req_file)
+    cached_f_list = check_file_and_get_package_list(cached_f)
 
     # Get the current package list.
     curr_list = []
     curr_f = expanduser(join(DEPS_ROOT_DIR, req_file))
-    if os.path.isfile(curr_f):
-        with open(curr_f, "rb") as f:
-            lines = f.readlines()
-        curr_list = get_packages(lines)
-    else:
-        print "mmh. We don't find the package list at {}.".format(curr_f)
+    curr_list = check_file_and_get_package_list(curr_f, create_cache=True)
 
     # Diff: which are new, which are to be deleted ?
     to_install, to_delete = get_diff(cached_f_list, curr_list)
@@ -92,16 +114,8 @@ def sync_packages(req_file):
     print "Found {} packages to install: {}".format(len(to_install), to_install)
 
     # Run the package managers.
-    if to_install or to_delete:
-        go = raw_input("Install packages ? [Y/n]")
-        if go in ["y", "yes", "o", ""]:
-            cmd = get_shell_cmd(req_file)
-            cmd = " ".join([cmd] + to_install)
-            os.system(cmd)
-            # TODO: don't copy if exited with error.
-            shutil.copyfile(curr_f, cached_f)
+    run_package_manager(to_install, to_delete, req_file)
 
-    # xxx: return codes
     return 0
 
 

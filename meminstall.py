@@ -34,6 +34,14 @@ def cache_init(req_file):
     """
     curr_apt = join(expanduser(DEPS_ROOT_DIR), req_file)
     cache_apt = join(expanduser(CONF), req_file)
+    # Create new directories if needed.
+    split = req_file.split("/")[0:-1]
+    import ipdb; ipdb.set_trace()
+    for i in xrange(len(split)):
+        maybe_dir = join(expanduser(CONF), split[i:i+1][0])
+        if not os.path.isdir(maybe_dir):
+            os.makedirs(expanduser(maybe_dir))
+    # At last, copy it.
     shutil.copyfile(curr_apt, cache_apt)
 
 def get_packages(lines):

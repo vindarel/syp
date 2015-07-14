@@ -23,6 +23,7 @@ DEPS_ROOT_DIR = "~/dotfiles/requirements/"
 REQUIREMENTS_FILES = {
     "APT": "apt-all.txt",
     "NPM": "npm-requirements.txt",
+    "RUBY": "ruby/ruby-packages.txt",
 }
 
 CONF = "~/.meminstall/"
@@ -66,9 +67,15 @@ def get_shell_cmd(req_file):
     """Form the shell command with the right package manager.
     It must be ready to append the packages list.
     """
-    pacman = "apt-get install -y"
+    pacman = None
+    if req_file == REQUIREMENTS_FILES["APT"]:
+        pacman = "apt-get install -y"
     if req_file == REQUIREMENTS_FILES["NPM"]:
         pacman = "npm install -g"
+    elif req_file == REQUIREMENTS_FILES["RUBY"]:
+        pacman = "gem install"
+    else:
+        print "Package manager not found. Abort."
 
     cmd = "sudo {}".format(pacman)
     return cmd
@@ -80,11 +87,15 @@ def run_package_manager(to_install, to_delete, req_file):
         go = raw_input("Install packages ? [Y/n]")
         if go in ["y", "yes", "o", ""]:
             cmd = get_shell_cmd(req_file)
+            if not cmd:
+                return 1
             cmd = " ".join([cmd] + to_install)
             os.system(cmd)
             # TODO: don't copy if exited with error.
             # xxx: return codes
             shutil.copyfile(curr_f, cached_f)
+
+    return 0
 
 def sync_packages(req_file):
 
@@ -108,23 +119,23 @@ def sync_packages(req_file):
 
     # Get the previous state
     cached_f = expanduser(join(CONF, req_file))
-    cached_f_list = check_file_and_get_package_list(cached_f)
+    cached_f_list = check_file_and_get_package_list(cached_f, create_cache=True)
 
     # Get the current package list.
     curr_list = []
     curr_f = expanduser(join(DEPS_ROOT_DIR, req_file))
-    curr_list = check_file_and_get_package_list(curr_f, create_cache=True)
+    curr_list = check_file_and_get_package_list(curr_f)
 
     # Diff: which are new, which are to be deleted ?
     to_install, to_delete = get_diff(cached_f_list, curr_list)
     print "In {}:".format(req_file)
-    print "Found {} packages to delete: {}".format(len(to_delete), to_delete)
-    print "Found {} packages to install: {}".format(len(to_install), to_install)
+    print "\tFound {} packages to delete: {}".format(len(to_delete), to_delete)
+    print "\tFound {} packages to install: {}".format(len(to_install), to_install)
 
     # Run the package managers.
-    run_package_manager(to_install, to_delete, req_file)
+    ret = run_package_manager(to_install, to_delete, req_file)
 
-    return 0
+    return ret
 
 
 def check_conf_dir(conf=CONF):

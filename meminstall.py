@@ -91,9 +91,6 @@ def run_package_manager(to_install, to_delete, req_file):
                 return 1
             cmd = " ".join([cmd] + to_install)
             os.system(cmd)
-            # TODO: don't copy if exited with error.
-            # xxx: return codes
-            shutil.copyfile(curr_f, cached_f)
 
     return 0
 
@@ -134,6 +131,8 @@ def sync_packages(req_file):
 
     # Run the package managers.
     ret = run_package_manager(to_install, to_delete, req_file)
+    if ret == 0:
+        shutil.copyfile(curr_f, cached_f)
 
     return ret
 

@@ -19,25 +19,25 @@ import operator
 import os
 from os.path import join, expanduser
 
-DEPS_ROOT_DIR = "~/dotfiles/requirements/"
+REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
 REQUIREMENTS_FILES = {
     "APT": "apt-all.txt",
     "NPM": "npm-requirements.txt",
     "RUBY": "ruby/ruby-packages.txt",
+    "PIP": "pip.txt",
 }
 
 CONF = "~/.meminstall/"
 
 SYSTEM_PACMAN = "apt-get"
 
-def cache_init(req_file):
+def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     """Copy the package listings to the conf cache.
     """
-    curr_apt = join(expanduser(DEPS_ROOT_DIR), req_file)
+    curr_apt = join(expanduser(root_dir), req_file)
     cache_apt = join(expanduser(CONF), req_file)
     # Create new directories if needed.
     split = req_file.split("/")[0:-1]
-    import ipdb; ipdb.set_trace()
     for i in xrange(len(split)):
         maybe_dir = join(expanduser(CONF), split[i:i+1][0])
         if not os.path.isdir(maybe_dir):
@@ -99,7 +99,7 @@ def run_package_manager(to_install, to_delete, req_file):
 
     return 0
 
-def sync_packages(req_file):
+def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
 
     def check_file_and_get_package_list(afile, create_cache=False):
         """From a given file, read its package list.
@@ -113,7 +113,7 @@ def sync_packages(req_file):
         else:
             if create_cache:
                 print "No cache. Will initialize for {}.".format(req_file)
-                cache_init(req_file)
+                cache_init(req_file, root_dir=root_dir)
             else:
                 print "We don't find the package list at {}.".format(afile)
 
@@ -125,14 +125,14 @@ def sync_packages(req_file):
 
     # Get the current package list.
     curr_list = []
-    curr_f = expanduser(join(DEPS_ROOT_DIR, req_file))
+    curr_f = expanduser(join(root_dir, req_file))
     curr_list = check_file_and_get_package_list(curr_f)
 
     # Diff: which are new, which are to be deleted ?
     to_install, to_delete = get_diff(cached_f_list, curr_list)
     print "In {}:".format(req_file)
-    print "\tFound {} packages to delete: {}".format(len(to_delete), to_delete)
     print "\tFound {} packages to install: {}".format(len(to_install), to_install)
+    print "\tFound {} packages to delete: {}".format(len(to_delete), to_delete)
 
     # Run the package managers.
     ret = run_package_manager(to_install, to_delete, req_file)
@@ -141,8 +141,7 @@ def sync_packages(req_file):
 
     return ret
 
-
-def check_conf_dir(conf=CONF):
+def check_conf_dir(conf=CONF, create_venv_conf=False):
     """If config directory doesn't exist, create it.
     """
     if not os.path.exists(expanduser(conf)):

@@ -145,9 +145,40 @@ def check_conf_dir(conf=CONF):
         print "Config directory created at {}".format(conf)
 
 def main():
-    check_conf_dir()
-    ret_cods = map(sync_packages, REQUIREMENTS_FILES.values())
-    return reduce(operator.or_, ret_cods)
+    root_dir = REQUIREMENTS_ROOT_DIR
+    create_venv_conf = False
+    # Auto-recognition of a venv should come as an option,
+    # not to interfere with normal command (install a global package).
+    # if os.environ.get("VIRTUAL_ENV") is not None:
+    #     create_venv_conf = True
+    #     dir_name = os.path.realpath("./").split("/")[-1]
+    #     root_dir = "./"
+    #     if os.path.isfile("requirements.txt"):
+    #         print "found a requirements file"
+    #         REQUIREMENTS_FILES["PIP"] = "requirements.txt"
+    #         REQUIREMENTS_FILES["APT"] = "abelujo/apt-requirements.txt"
+    #         print REQUIREMENTS_FILES, root_dir
+    #         exit(0)
+
+    #     elif os.path.isfile(join(dir_name, "requirements.txt")):
+    #         print "req in project file, like django."
+    #         REQUIREMENTS_FILES["PIP"] = join(dir_name, "requirements.txt")
+    #         print REQUIREMENTS_FILES, root_dir
+
+    # else:
+    if True:
+        print "not in venv"
+        print REQUIREMENTS_FILES, root_dir
+
+    # exit(0)
+
+    check_conf_dir(create_venv_conf=create_venv_conf)
+    #TODO: pass root_dir to sync_packages, but not with map. partial application !
+    ret_codes = []
+    for val in REQUIREMENTS_FILES.values():
+        ret_codes.append(sync_packages(val, root_dir=root_dir))
+
+    return reduce(operator.or_, ret_codes)
 
 if __name__ == "__main__":
     exit(main())

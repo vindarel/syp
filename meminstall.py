@@ -94,6 +94,9 @@ def run_package_manager(to_install, to_delete, req_file):
             cmd = " ".join([cmd] + to_install)
             os.system(cmd)
 
+        else:
+            return 1
+
     return 0
 
 def sync_packages(req_file):

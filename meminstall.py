@@ -74,6 +74,8 @@ def get_shell_cmd(req_file):
         pacman = "npm install -g"
     elif req_file == REQUIREMENTS_FILES["RUBY"]:
         pacman = "gem install"
+    elif req_file == REQUIREMENTS_FILES["PIP"]:
+        pacman = "pip install"
     else:
         print "Package manager not found. Abort."
 

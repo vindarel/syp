@@ -18,6 +18,7 @@ import shutil
 import operator
 import os
 from os.path import join, expanduser
+from termcolor import colored
 
 REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
 REQUIREMENTS_FILES = {
@@ -86,7 +87,7 @@ def run_package_manager(to_install, to_delete, req_file):
     """Run the right package manager. Install and delete packages.
     """
     if to_install or to_delete:
-        go = raw_input("Install packages ? [Y/n]")
+        go = raw_input("Install and delete packages ? [Y/n]")
         if go in ["y", "yes", "o", ""]:
             cmd = get_shell_cmd(req_file)
             if not cmd:
@@ -129,8 +130,17 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     # Diff: which are new, which are to be deleted ?
     to_install, to_delete = get_diff(cached_f_list, curr_list)
     print "In {}:".format(req_file)
-    print "\tFound {} packages to install: {}".format(len(to_install), to_install)
-    print "\tFound {} packages to delete: {}".format(len(to_delete), to_delete)
+    if not len(to_install) and not len(to_delete):
+        print "\tnothing to do"
+    else:
+        txt = "\tFound {} packages to install: {}".format(len(to_install), to_install)
+        if len(to_install):
+            txt = colored(txt, "green")
+        print txt
+        txt = "\tFound {} packages to delete: {}".format(len(to_delete), to_delete)
+        if len(to_delete):
+            txt = colored(txt, "red")
+        print txt
 
     # Run the package managers.
     ret = run_package_manager(to_install, to_delete, req_file)

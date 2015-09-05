@@ -13,11 +13,16 @@ program to add the package name to the right file.
 
 """
 
-import sys
-import shutil
 import operator
 import os
-from os.path import join, expanduser
+import shutil
+import sys
+from os.path import expanduser
+from os.path import join
+
+import clize
+from sigtools.modifiers import kwoargs
+from sigtools.modifiers import annotate
 from termcolor import colored
 
 REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
@@ -129,6 +134,8 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
 
     # Diff: which are new, which are to be deleted ?
     to_install, to_delete = get_diff(cached_f_list, curr_list)
+
+    # Pretty output
     print "In {}:".format(req_file)
     if not len(to_install) and not len(to_delete):
         print "\tnothing to do"
@@ -156,7 +163,12 @@ def check_conf_dir(conf=CONF, create_venv_conf=False):
         os.makedirs(expanduser(conf))
         print "Config directory created at {}".format(conf)
 
-def main():
+@kwoargs("pm")
+def main(pm=None, *rest):
+    """
+
+    pm: specify a package manager.
+    """
     root_dir = REQUIREMENTS_ROOT_DIR
     create_venv_conf = False
     # Auto-recognition of a venv should come as an option,
@@ -182,6 +194,13 @@ def main():
         print "not in venv"
         print REQUIREMENTS_FILES, root_dir
 
+    # Deal with another package manager
+    if pm:
+        # pacman: pm
+        # args:   rest
+        print "Let's use {} to install packages {} !".format(pm, " ".join(rest))
+        exit(0)
+
     # exit(0)
 
     check_conf_dir(create_venv_conf=create_venv_conf)
@@ -193,4 +212,4 @@ def main():
     return reduce(operator.or_, ret_codes)
 
 if __name__ == "__main__":
-    exit(main())
+    exit(clize.run(main))

@@ -92,12 +92,10 @@ def run_package_manager(to_install, to_delete, req_file):
             if not cmd:
                 return 1
             cmd = " ".join([cmd] + to_install)
-            os.system(cmd)
+            retcode = os.system(cmd)
+            return retcode
 
-        else:
-            return 1
-
-    return 0
+    return 1
 
 def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
 

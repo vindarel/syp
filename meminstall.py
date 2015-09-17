@@ -103,6 +103,22 @@ def run_package_manager(to_install, to_delete, req_file):
 
     return 1
 
+def write_packages(packages, conf_file=None, message=None, root_dir=""):
+    """Add the packages to the given conf file.
+    """
+    conf_file = expanduser(os.path.join(root_dir, conf_file))
+    if os.path.isfile(conf_file):
+        with open(conf_file, "a") as f:
+            lines = ["# {}\n".format(message)]
+            lines += ["\n".join(packages)]
+            lines.append("\n")
+            f.writelines(lines)
+            print "Added '{}' to {} package list...".format(" ".join(packages), conf_file)
+            return 0
+
+    print "mmh... the config file doesn't exist: {}".format(conf_file)
+    exit(1)
+
 def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
 
     def check_file_and_get_package_list(afile, create_cache=False):
@@ -163,8 +179,19 @@ def check_conf_dir(conf=CONF, create_venv_conf=False):
         os.makedirs(expanduser(conf))
         print "Config directory created at {}".format(conf)
 
-@kwoargs("pm")
-def main(pm=None, *rest):
+def get_conf_file(pacman):
+    """Return the configuration file of the given package manager.
+    """
+    conf = REQUIREMENTS_FILES.get(pacman)
+    if not conf:
+        print "There is no configuration file for this package manager. Abort."
+        return 1
+
+    return conf
+
+@annotate(pm="p", message="m")
+@kwoargs("pm", "message")
+def main(pm="", message="", *packages):
     """
 
     pm: specify a package manager.
@@ -194,19 +221,21 @@ def main(pm=None, *rest):
         print "not in venv"
         print REQUIREMENTS_FILES, root_dir
 
+    req_files = REQUIREMENTS_FILES.items()
     # Deal with another package manager
     if pm:
-        # pacman: pm
-        # args:   rest
-        print "Let's use {} to install packages {} !".format(pm, " ".join(rest))
-        exit(0)
-
-    # exit(0)
+        pm = pm.upper()
+        # Sync only the conf file of the current package manager.
+        req_files = filter(lambda tup: tup[0] == pm, req_files)
+        print "Let's use {} to install packages {} !".format(pm, " ".join(packages))
+        print "with comment: " + message
+        conf_file = get_conf_file(pm)
+        write_packages(packages, message=message, conf_file=conf_file, root_dir=root_dir)
+        print "Syncing {} packages...".format(pm.lower())
 
     check_conf_dir(create_venv_conf=create_venv_conf)
-    #TODO: pass root_dir to sync_packages, but not with map. partial application !
     ret_codes = []
-    for val in REQUIREMENTS_FILES.values():
+    for _, val in req_files:
         ret_codes.append(sync_packages(val, root_dir=root_dir))
 
     return reduce(operator.or_, ret_codes)

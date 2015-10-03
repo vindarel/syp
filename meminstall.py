@@ -83,7 +83,7 @@ def get_shell_cmd(req_file):
     elif req_file == REQUIREMENTS_FILES["PIP"]:
         pacman = "pip install"
     else:
-        print "Package manager not found. Abort."
+        print("Package manager not found. Abort.")
 
     cmd = "sudo {}".format(pacman)
     return cmd
@@ -92,7 +92,7 @@ def run_package_manager(to_install, to_delete, req_file):
     """Run the right package manager. Install and delete packages.
     """
     if to_install or to_delete:
-        go = raw_input("Install and delete packages ? [Y/n]")
+        go = input("Install and delete packages ? [Y/n]")
         if go in ["y", "yes", "o", ""]:
             cmd = get_shell_cmd(req_file)
             if not cmd:
@@ -113,10 +113,10 @@ def write_packages(packages, conf_file=None, message=None, root_dir=""):
             lines += ["\n".join(packages)]
             lines.append("\n")
             f.writelines(lines)
-            print "Added '{}' to {} package list...".format(" ".join(packages), conf_file)
+            print("Added '{}' to {} package list...".format(" ".join(packages), conf_file))
             return 0
 
-    print "mmh... the config file doesn't exist: {}".format(conf_file)
+    print("mmh... the config file doesn't exist: {}".format(conf_file))
     exit(1)
 
 def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
@@ -127,15 +127,15 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
         """
         packages = []
         if os.path.isfile(afile):
-            with open(afile, "rb") as f:
+            with open(afile, "r") as f:
                 lines = f.readlines()
             packages = get_packages(lines)
         else:
             if create_cache:
-                print "No cache. Will initialize for {}.".format(req_file)
+                print("No cache. Will initialize for {}.".format(req_file))
                 cache_init(req_file, root_dir=root_dir)
             else:
-                print "We don't find the package list at {}.".format(afile)
+                print("We don't find the package list at {}.".format(afile))
 
         return packages
 
@@ -152,18 +152,18 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     to_install, to_delete = get_diff(cached_f_list, curr_list)
 
     # Pretty output
-    print "In {}:".format(req_file)
+    print("In {}:".format(req_file))
     if not len(to_install) and not len(to_delete):
-        print "\tnothing to do"
+        print("\tnothing to do")
     else:
         txt = "\tFound {} packages to install: {}".format(len(to_install), to_install)
         if len(to_install):
             txt = colored(txt, "green")
-        print txt
+        print(txt)
         txt = "\tFound {} packages to delete: {}".format(len(to_delete), to_delete)
         if len(to_delete):
             txt = colored(txt, "red")
-        print txt
+        print(txt)
 
     # Run the package managers.
     ret = run_package_manager(to_install, to_delete, req_file)
@@ -177,14 +177,14 @@ def check_conf_dir(conf=CONF, create_venv_conf=False):
     """
     if not os.path.exists(expanduser(conf)):
         os.makedirs(expanduser(conf))
-        print "Config directory created at {}".format(conf)
+        print("Config directory created at {}".format(conf))
 
 def get_conf_file(pacman):
     """Return the configuration file of the given package manager.
     """
     conf = REQUIREMENTS_FILES.get(pacman)
     if not conf:
-        print "There is no configuration file for this package manager. Abort."
+        print("There is no configuration file for this package manager. Abort.")
         return 1
 
     return conf
@@ -227,11 +227,18 @@ def main(pm="", message="", *packages):
         pm = pm.upper()
         # Sync only the conf file of the current package manager.
         req_files = filter(lambda tup: tup[0] == pm, req_files)
-        print "Let's use {} to install packages {} !".format(pm, " ".join(packages))
-        print "with comment: " + message
+        print("Let's use {} to install packages {} !".format(pm, " ".join(packages)))
+        print("with comment: " + message)
+        # TODO: venv
         conf_file = get_conf_file(pm)
         write_packages(packages, message=message, conf_file=conf_file, root_dir=root_dir)
-        print "Syncing {} packages...".format(pm.lower())
+        print("Syncing {} packages...".format(pm.lower()))
+
+    if dest:
+        # We could be in a venv but in the root of anothe project and still
+        # add a package to its requirement, that we give on the cli.
+        print("destination to write: ", dest)
+        exit
 
     check_conf_dir(create_venv_conf=create_venv_conf)
     ret_codes = []

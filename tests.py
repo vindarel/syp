@@ -3,17 +3,28 @@
 
 from unittest import TestCase
 from unittest import main
+from unittest import mock
 
 import meminstall
 
 class Test(TestCase):
+    """We mock the calls to methods that have IO.
+    """
 
     def setUp(self):
-        pass
+        self.packages = ["rst", "two_pack"]
+        self.meminstall = meminstall
+        self.meminstall.check_file_and_get_package_list = mock.MagicMock(return_value=self.packages)
+        self.meminstall.copy_file = mock.MagicMock()
+        self.meminstall.run_package_manager = mock.MagicMock(return_value=0)
+        self.meminstall.check_conf_dir = mock.MagicMock()
+        self.meminstall.get_conf_file = mock.MagicMock() #TODO: side_effect
 
     def test_nominal(self):
-        pass
-        # ret = meminstall.main(["a_package"])
+        ret = meminstall.main(["a_package"])
+        assert self.meminstall.check_file_and_get_package_list.call_count == \
+            len(self.meminstall.REQUIREMENTS_FILES) * 2
+        self.assertEqual(0, ret)
 
 class TestUtils(TestCase):
 

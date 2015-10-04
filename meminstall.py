@@ -148,6 +148,8 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
                 cache_init(req_file, root_dir=root_dir)
             else:
                 print("We don't find the package list at {}.".format(afile))
+def copy_file(curr_f, cached_f):
+    shutil.copyfile(curr_f, cached_f)
 
         return packages
 
@@ -180,7 +182,7 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     # Run the package managers.
     ret = run_package_manager(to_install, to_delete, req_file)
     if ret == 0:
-        shutil.copyfile(curr_f, cached_f)
+        copy_file(curr_f, cached_f)
 
     return ret
 

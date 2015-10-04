@@ -1,0 +1,5 @@
+termcolor       # colored print
+clize           # command line interface from method's (kw)args
+tox             # test in a venv, with many python versions
+future
+six

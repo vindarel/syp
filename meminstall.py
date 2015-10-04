@@ -13,6 +13,8 @@ program to add the package name to the right file.
 
 """
 
+from __future__ import print_function
+
 import operator
 import os
 import shutil
@@ -25,6 +27,9 @@ import clize
 from sigtools.modifiers import annotate
 from sigtools.modifiers import kwoargs
 from termcolor import colored
+
+from builtins import input
+from io import open
 
 REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
 REQUIREMENTS_FILES = {
@@ -134,7 +139,7 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
         """
         packages = []
         if os.path.isfile(afile):
-            with open(afile, "r") as f:
+            with open(afile, "rt") as f:
                 lines = f.readlines()
             packages = get_packages(lines)
         else:

@@ -54,10 +54,16 @@ def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
 
 def get_packages(lines):
     """Get rid of comments. Return the packages list.
+
+    warning: it removes everything after a '#'. Do some requirement
+    files use it to specify the package version ?
+
     """
     packages = []
     for line in lines:
         if (not line.startswith('#')) and (line.strip()):
+            if '#' in line:
+                line = line.split('#')[0]
             packages.append(line.strip())
     return packages
 

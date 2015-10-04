@@ -17,12 +17,13 @@ import operator
 import os
 import shutil
 import sys
+from functools import reduce
 from os.path import expanduser
 from os.path import join
 
 import clize
-from sigtools.modifiers import kwoargs
 from sigtools.modifiers import annotate
+from sigtools.modifiers import kwoargs
 from termcolor import colored
 
 REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
@@ -226,7 +227,7 @@ def main(pm="", message="", *packages):
     if pm:
         pm = pm.upper()
         # Sync only the conf file of the current package manager.
-        req_files = filter(lambda tup: tup[0] == pm, req_files)
+        req_files = [tup for tup in req_files if tup[0] == pm]
         print("Let's use {} to install packages {} !".format(pm, " ".join(packages)))
         print("with comment: " + message)
         # TODO: venv

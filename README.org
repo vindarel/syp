@@ -1,0 +1,27 @@
+* Sync that package manager with my dotfiles
+
+Basic usage:
+
+: meminstall foo
+
+installs package =foo= with the system package manager (like =apt=).
+
+: meminstall --pm pip foo
+
+installs (globally) with =pip=.
+
+: meminstall --pm pip foo --rm
+
+removes it.
+
+So, recommended aliases:
+
+: alias rpip="meminstall --pm pip"
+: alias urpip="meminstall --pm pip --rm"
+
+* TODOs
+
+- auto-recognize a virtualenv
+- config file
+- call our editor
+- undo last action

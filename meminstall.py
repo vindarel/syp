@@ -81,37 +81,53 @@ def get_diff(cached_list, curr_list):
     to_delete = list(set(cached_list) - set(curr_list))
     return (to_install, to_delete)
 
-def get_shell_cmd(req_file):
+def get_shell_cmd(req_file, rm=False):
     """Form the shell command with the right package manager.
     It must be ready to append the packages list.
+
+    req_file: str representing the file we read the packages from.
     """
     pacman = None
     if req_file == REQUIREMENTS_FILES["APT"]:
-        pacman = "apt-get install -y"
-    if req_file == REQUIREMENTS_FILES["NPM"]:
-        pacman = "npm install -g"
+        pacman = "apt-get {} -y"
+    elif req_file == REQUIREMENTS_FILES["NPM"]:
+        pacman = "npm {} -g"
     elif req_file == REQUIREMENTS_FILES["RUBY"]:
-        pacman = "gem install"
+        pacman = "gem {}"
     elif req_file == REQUIREMENTS_FILES["PIP"]:
-        pacman = "pip install"
+        pacman = "pip {}"
     else:
         print("Package manager not found. Abort.")
+        return 0
 
+    un_install = "install"
+    if rm:
+        un_install = "remove"
+    pacman = pacman.format(un_install)
     cmd = "sudo {}".format(pacman)
     return cmd
 
 def run_package_manager(to_install, to_delete, req_file):
-    """Run the right package manager. Install and delete packages.
+    """Construct the command, run the right package manager.
+
+    Install and delete packages.
     """
     if to_install or to_delete:
         go = input("Install and delete packages ? [Y/n]")
         if go in ["y", "yes", "o", ""]:
-            cmd = get_shell_cmd(req_file)
-            if not cmd:
-                return 1
-            cmd = " ".join([cmd] + to_install)
-            retcode = os.system(cmd)
-            return retcode
+            if to_delete:
+                print("Removing…")
+                cmd_rm = get_shell_cmd(req_file, rm=True)
+                cmd_rm = " ".join([cmd_rm] + to_delete)
+                ret_rm = os.system(cmd_rm)
+
+            if to_install:
+                cmd_install = get_shell_cmd(req_file)
+                cmd_install = " ".join([cmd_install] + to_install)
+                print("Installing…")
+                ret_install = os.system(cmd_install)
+
+            return ret_install or ret_rm
 
     return 1
 
@@ -131,27 +147,42 @@ def write_packages(packages, conf_file=None, message=None, root_dir=""):
     print("mmh... the config file doesn't exist: {}".format(conf_file))
     exit(1)
 
-def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
+def erase_packages(packages, conf_file=None, message=None, root_dir=""):
+    conf_file = expanduser(os.path.join(root_dir, conf_file))
+    if os.path.isfile(conf_file):
+        with open(conf_file, "r") as f:
+            lines = f.readlines()
+            erased = []
+            for pack in packages:
+                lines = [line for line in lines if not line.startswith(pack)]
 
-    def check_file_and_get_package_list(afile, create_cache=False):
-        """From a given file, read its package list.
-        Create the cache file if appropriate.
-        """
-        packages = []
-        if os.path.isfile(afile):
-            with open(afile, "rt") as f:
-                lines = f.readlines()
-            packages = get_packages(lines)
+        with open(conf_file, "w") as f:
+            f.writelines(lines)
+            print("Removed {} from {} package list.".format(", ".join(packages), conf_file))
+
+def check_file_and_get_package_list(afile, create_cache=False):
+    """From a given file, read its package list.
+    Create the cache file if appropriate.
+    """
+    packages = []
+    if os.path.isfile(afile):
+        with open(afile, "rt") as f:
+            lines = f.readlines()
+        packages = get_packages(lines)
+    else:
+        if create_cache:
+            print("No cache. Will initialize for {}.".format(req_file))
+            cache_init(req_file, root_dir=root_dir)
         else:
-            if create_cache:
-                print("No cache. Will initialize for {}.".format(req_file))
-                cache_init(req_file, root_dir=root_dir)
-            else:
-                print("We don't find the package list at {}.".format(afile))
+            print("We don't find the package list at {}.".format(afile))
+
+    return packages
+
 def copy_file(curr_f, cached_f):
     shutil.copyfile(curr_f, cached_f)
 
-        return packages
+def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
+
 
     # Get the previous state
     cached_f = expanduser(join(CONF, req_file))
@@ -182,6 +213,7 @@ def copy_file(curr_f, cached_f):
     # Run the package managers.
     ret = run_package_manager(to_install, to_delete, req_file)
     if ret == 0:
+        #XXX check which of install or rm worked, write corresponding item in file.
         copy_file(curr_f, cached_f)
 
     return ret
@@ -203,12 +235,16 @@ def get_conf_file(pacman):
 
     return conf
 
-@annotate(pm="p", message="m")
-@kwoargs("pm", "message")
-def main(pm="", message="", *packages):
+@annotate(pm="p", message="m", dest="d")
+@kwoargs("pm", "message", "dest", "rm")
+def main(pm="", message="", dest="", rm=False, *packages):
     """
 
     pm: specify a package manager.
+
+    rm: remove installed packages.
+
+    TODO: give list of available pacman.
     """
     root_dir = REQUIREMENTS_ROOT_DIR
     create_venv_conf = False
@@ -245,7 +281,12 @@ def main(pm="", message="", *packages):
         print("with comment: " + message)
         # TODO: venv
         conf_file = get_conf_file(pm)
-        write_packages(packages, message=message, conf_file=conf_file, root_dir=root_dir)
+        if not rm:
+            write_packages(packages, message=message, conf_file=conf_file, root_dir=root_dir)
+        else:
+            # Edit the file in cache.
+            erase_packages(packages, message=message, conf_file=conf_file, root_dir=root_dir)
+
         print("Syncing {} packages...".format(pm.lower()))
 
     if dest:

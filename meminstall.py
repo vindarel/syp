@@ -242,7 +242,7 @@ def main(pm="", message="", dest="", rm=False, *packages):
 
     pm: specify a package manager.
 
-    rm: remove installed packages.
+    rm: remove installed packages. If no packages are specified, call $EDITOR on the configuration file.
 
     TODO: give list of available pacman.
     """
@@ -284,6 +284,11 @@ def main(pm="", message="", dest="", rm=False, *packages):
         if not rm:
             write_packages(packages, message=message, conf_file=conf_file, root_dir=root_dir)
         else:
+            if not packages:
+                # Edit conf file directly
+                conf = expanduser(os.path.join(root_dir, conf_file))
+                cmd = " ".join([os.environ.get('EDITOR'), conf])
+                ret = os.system(cmd)
             # Edit the file in cache.
             erase_packages(packages, message=message, conf_file=conf_file, root_dir=root_dir)
 

@@ -33,10 +33,10 @@ from io import open
 
 REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
 REQUIREMENTS_FILES = {
-    "APT": "apt-all.txt",
-    "NPM": "npm-requirements.txt",
-    "RUBY": "ruby/ruby-packages.txt",
-    "PIP": "pip.txt",
+    "apt": "apt-all.txt",
+    "npm": "npm-requirements.txt",
+    "ruby": "ruby/ruby-packages.txt",
+    "pip": "pip.txt",
 }
 
 CONF = "~/.meminstall/"
@@ -88,13 +88,13 @@ def get_shell_cmd(req_file, rm=False):
     req_file: str representing the file we read the packages from.
     """
     pacman = None
-    if req_file == REQUIREMENTS_FILES["APT"]:
+    if req_file == REQUIREMENTS_FILES["apt"]:
         pacman = "apt-get {} -y"
-    elif req_file == REQUIREMENTS_FILES["NPM"]:
+    elif req_file == REQUIREMENTS_FILES["npm"]:
         pacman = "npm {} -g"
-    elif req_file == REQUIREMENTS_FILES["RUBY"]:
+    elif req_file == REQUIREMENTS_FILES["ruby"]:
         pacman = "gem {}"
-    elif req_file == REQUIREMENTS_FILES["PIP"]:
+    elif req_file == REQUIREMENTS_FILES["pip"]:
         pacman = "pip {}"
     else:
         print("Package manager not found. Abort.")
@@ -228,10 +228,10 @@ def check_conf_dir(conf=CONF, create_venv_conf=False):
 def get_conf_file(pacman):
     """Return the configuration file of the given package manager.
     """
-    conf = REQUIREMENTS_FILES.get(pacman)
+    conf = REQUIREMENTS_FILES.get(pacman.lower())
     if not conf:
         print("There is no configuration file for this package manager. Abort.")
-        return 1
+        return None
 
     return conf
 
@@ -272,15 +272,21 @@ def main(pm="", message="", dest="", rm=False, *packages):
         print REQUIREMENTS_FILES, root_dir
 
     req_files = REQUIREMENTS_FILES.items()
+    req_files = list(REQUIREMENTS_FILES.items())
+
+    conf_file = get_conf_file(pm)
+    if not conf_file:
+        exit(1)
+    if editor:
+        run_editor(root_dir, conf_file)
+
     # Deal with another package manager
     if pm:
-        pm = pm.upper()
         # Sync only the conf file of the current package manager.
         req_files = [tup for tup in req_files if tup[0] == pm]
         print("Let's use {} to install packages {} !".format(pm, " ".join(packages)))
         print("with comment: " + message)
         # TODO: venv
-        conf_file = get_conf_file(pm)
         if not rm:
             write_packages(packages, message=message, conf_file=conf_file, root_dir=root_dir)
         else:
@@ -305,7 +311,7 @@ def main(pm="", message="", dest="", rm=False, *packages):
     for _, val in req_files:
         ret_codes.append(sync_packages(val, root_dir=root_dir))
 
-    return reduce(operator.or_, ret_codes)
+    return reduce(operator.or_, ret_codes, 0)
 
 if __name__ == "__main__":
     exit(clize.run(main))

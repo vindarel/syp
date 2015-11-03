@@ -235,9 +235,16 @@ def get_conf_file(pacman):
 
     return conf
 
-@annotate(pm="p", message="m", dest="d")
-@kwoargs("pm", "message", "dest", "rm")
-def main(pm="", message="", dest="", rm=False, *packages):
+def run_editor(root_dir, conf_file):
+    conf = expanduser(os.path.join(root_dir, conf_file))
+    cmd = " ".join([os.environ.get('EDITOR'), conf])
+    ret = os.system(cmd)
+    return ret
+
+
+@annotate(pm="p", message="m", dest="d", editor="e")
+@kwoargs("pm", "message", "dest", "rm", "editor")
+def main(pm="", message="", dest="", rm=False, editor=False, *packages):
     """
 
     pm: specify a package manager.

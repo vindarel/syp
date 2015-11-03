@@ -57,21 +57,6 @@ def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     # At last, copy it.
     shutil.copyfile(curr_apt, cache_apt)
 
-def get_packages(lines):
-    """Get rid of comments. Return the packages list.
-
-    warning: it removes everything after a '#'. Do some requirement
-    files use it to specify the package version ?
-
-    """
-    packages = []
-    for line in lines:
-        if (not line.startswith('#')) and (line.strip()):
-            if '#' in line:
-                line = line.split('#')[0]
-            packages.append(line.strip())
-    return packages
-
 def get_diff(cached_list, curr_list):
     """Diff two lists, return a tuple of lists to be installed, to be
     deleted.
@@ -131,21 +116,57 @@ def run_package_manager(to_install, to_delete, req_file):
 
     return 1
 
+def filter_packages(lines):
+    """Get rid of comments. Return the packages list.
+
+    warning: it removes everything after a '#'. Do some requirement
+    files use it to specify the package version ?
+
+    """
+    packages = []
+    for line in lines:
+        if (not line.startswith('#')) and (line.strip()):
+            if '#' in line:
+                line = line.split('#')[0]
+            packages.append(line.strip())
+    return packages
+
+def read_packages(conf_file, root_dir=""):
+    conf_file = expanduser(os.path.join(root_dir, conf_file))
+    lines = []
+    if os.path.isfile(conf_file):
+        with open(conf_file, "r") as f:
+            lines = f.readlines()
+            lines = filter_packages(lines)
+
+    return lines
+
 def write_packages(packages, conf_file=None, message=None, root_dir=""):
-    """Add the packages to the given conf file.
+    """Add the packages to the given conf file. Don't write duplicates.
     """
     conf_file = expanduser(os.path.join(root_dir, conf_file))
-    if os.path.isfile(conf_file):
-        with open(conf_file, "a") as f:
-            lines = ["# {}\n".format(message)]
-            lines += ["\n".join(packages)]
-            lines.append("\n")
-            f.writelines(lines)
-            print("Added '{}' to {} package list...".format(" ".join(packages), conf_file))
-            return 0
+    existing = read_packages(conf_file, root_dir=root_dir)
+    packages = list(packages)
+    for pack in packages:
+        if pack in existing:
+            print("'{}' is already present".format(pack))
+            packages.remove(pack)
 
-    print("mmh... the config file doesn't exist: {}".format(conf_file))
-    exit(1)
+    if packages:
+        if os.path.isfile(conf_file):
+            with open(conf_file, "a") as f:
+                lines = []
+                if message:
+                    lines += ["# {}\n".format(message)]
+                lines += ["\n".join(packages)]
+                lines.append("\n")
+                f.writelines(lines)
+                print("Added '{}' to {} package list...".format(" ".join(packages), conf_file))
+                return 0
+        else:
+            print("mmh... the config file doesn't exist: {}".format(conf_file))
+            exit(1)
+
 
 def erase_packages(packages, conf_file=None, message=None, root_dir=""):
     conf_file = expanduser(os.path.join(root_dir, conf_file))
@@ -168,7 +189,7 @@ def check_file_and_get_package_list(afile, create_cache=False):
     if os.path.isfile(afile):
         with open(afile, "rt") as f:
             lines = f.readlines()
-        packages = get_packages(lines)
+        packages = filter_packages(lines)
     else:
         if create_cache:
             print("No cache. Will initialize for {}.".format(req_file))

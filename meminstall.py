@@ -30,29 +30,37 @@ from sigtools.modifiers import kwoargs
 from termcolor import colored
 
 
-#: The base directory where lie the configuration files.
-REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
+try:
+    from settings import (REQUIREMENTS_ROOT_DIR,
+                          REQUIREMENTS_FILES,
+                          CONF,
+                          SYSTEM_PACMAN)
+except Exception as e:
+    e = colored(e, "red")
+    print(e)
+    #: The base directory where lie the configuration files.
+    REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
 
-#: mapping package-manager -> config file.
-# Shall we do "any name" -> package manager -> config file ?
-# Where the pacman could be defined inside the file.
+    #: mapping package-manager -> config file.
+    # Shall we do "any name" -> package manager -> config file ?
+    # Where the pacman could be defined inside the file.
 
-# The mapping could also be inplicit. If we have a file mao.txt, the
-# command "meminstall --pm mao foo" will write foo to mao.txt and will
-# use the package manager defined inside it.
-REQUIREMENTS_FILES = {
-    "apt": "apt-all.txt",
-    "npm": "npm-requirements.txt",
-    "ruby": "ruby/ruby-packages.txt",
-    "gem": "ruby/ruby-packages.txt",
-    "pip": "pip.txt",
-}
+    # The mapping could also be inplicit. If we have a file mao.txt, the
+    # command "meminstall --pm mao foo" will write foo to mao.txt and will
+    # use the package manager defined inside it.
+    REQUIREMENTS_FILES = {
+        "apt": "apt-all.txt",
+        "npm": "npm-requirements.txt",
+        "ruby": "ruby/ruby-packages.txt",
+        "gem": "ruby/ruby-packages.txt",
+        "pip": "pip.txt",
+    }
 
-#: Where to put the config, where to cache the files.
-CONF = "~/.meminstall/"
+    #: Where to put the config, where to cache the files.
+    CONF = "~/.meminstall/"
 
-#: System package manager, as a default. This will be induced on next version.
-SYSTEM_PACMAN = "apt-get"
+    #: System package manager, as a default. This will be induced on next version.
+    SYSTEM_PACMAN = "apt-get"
 
 def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     """Copy the package listings to the conf cache.
@@ -293,7 +301,6 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
     TODO: give list of available pacman.
     """
     root_dir = REQUIREMENTS_ROOT_DIR
-
     req_files = REQUIREMENTS_FILES.items()
     req_files = list(REQUIREMENTS_FILES.items())
 

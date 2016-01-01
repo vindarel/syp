@@ -169,12 +169,15 @@ def write_packages(packages, conf_file=None, message=None, root_dir=""):
 
     if packages:
         if os.path.isfile(conf_file):
-            with open(conf_file, "a") as f:
-                lines = []
+            lines = []
+            # Lines of packages, with the comment once inline.
+            for pack in packages:
                 if message:
-                    lines += ["# {}\n".format(message)]
-                lines += ["\n".join(packages)]
-                lines.append("\n")
+                    lines.append(u"{} \t# {}\n".format(pack, message))
+                    message = None  # write it only once.
+                else:
+                    lines.append(u"{}\n".format(pack))
+            with open(conf_file, "a") as f:
                 f.writelines(lines)
                 print("Added '{}' to {} package list...".format(" ".join(packages), conf_file))
                 return 0

@@ -19,7 +19,6 @@ from io import open
 import operator
 import os
 import shutil
-import sys
 from functools import reduce
 from os.path import expanduser
 from os.path import join
@@ -342,6 +341,9 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
         ret_codes.append(sync_packages(val, root_dir=root_dir))
 
     return reduce(operator.or_, ret_codes, 0)
+
+def run():
+    exit(clize.run(main))
 
 if __name__ == "__main__":
     exit(clize.run(main))

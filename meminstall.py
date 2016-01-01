@@ -4,16 +4,17 @@
 """We list all the packages we install on our system in a single file
 (one for each package manager: one for debian packages, another for
 pip, etc). Each file is under version control. We want to be able to
-edit those files (remove packages, add some) and "sync" our system
+edit those files (add, remove packages) and "sync" our system
 with the modifications.
 
 We also want to call a program with a package as argument and that
 program to add the package name to the right file.
 
-
 """
 
 from __future__ import print_function
+from builtins import input
+from io import open
 
 import operator
 import os
@@ -28,19 +29,29 @@ from sigtools.modifiers import annotate
 from sigtools.modifiers import kwoargs
 from termcolor import colored
 
-from builtins import input
-from io import open
 
+#: The base directory where lie the configuration files.
 REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
+
+#: mapping package-manager -> config file.
+# Shall we do "any name" -> package manager -> config file ?
+# Where the pacman could be defined inside the file.
+
+# The mapping could also be inplicit. If we have a file mao.txt, the
+# command "meminstall --pm mao foo" will write foo to mao.txt and will
+# use the package manager defined inside it.
 REQUIREMENTS_FILES = {
     "apt": "apt-all.txt",
     "npm": "npm-requirements.txt",
     "ruby": "ruby/ruby-packages.txt",
+    "gem": "ruby/ruby-packages.txt",
     "pip": "pip.txt",
 }
 
+#: Where to put the config, where to cache the files.
 CONF = "~/.meminstall/"
 
+#: System package manager, as a default. This will be induced on next version.
 SYSTEM_PACMAN = "apt-get"
 
 def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
@@ -50,7 +61,7 @@ def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     cache_apt = join(expanduser(CONF), req_file)
     # Create new directories if needed.
     split = req_file.split("/")[0:-1]
-    for i in xrange(len(split)):
+    for i in range(len(split)):
         maybe_dir = join(expanduser(CONF), split[i:i+1][0])
         if not os.path.isdir(maybe_dir):
             os.makedirs(expanduser(maybe_dir))
@@ -96,9 +107,13 @@ def run_package_manager(to_install, to_delete, req_file):
     """Construct the command, run the right package manager.
 
     Install and delete packages.
+
+    return 0 when ok, 1 when there was a pb, or nothing to install nor uninstall.
     """
     if to_install or to_delete:
         go = input("Install and delete packages ? [Y/n]")
+        ret_rm = 0
+        ret_install = 0
         if go in ["y", "yes", "o", ""]:
             if to_delete:
                 print("Removing…")
@@ -181,7 +196,7 @@ def erase_packages(packages, conf_file=None, message=None, root_dir=""):
             f.writelines(lines)
             print("Removed {} from {} package list.".format(", ".join(packages), conf_file))
 
-def check_file_and_get_package_list(afile, create_cache=False):
+def check_file_and_get_package_list(afile, create_cache=False, root_dir=None):
     """From a given file, read its package list.
     Create the cache file if appropriate.
     """
@@ -192,8 +207,8 @@ def check_file_and_get_package_list(afile, create_cache=False):
         packages = filter_packages(lines)
     else:
         if create_cache:
-            print("No cache. Will initialize for {}.".format(req_file))
-            cache_init(req_file, root_dir=root_dir)
+            print("No cache. Will initialize for {}.".format(afile))
+            cache_init(afile, root_dir=root_dir)
         else:
             print("We don't find the package list at {}.".format(afile))
 
@@ -207,7 +222,7 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
 
     # Get the previous state
     cached_f = expanduser(join(CONF, req_file))
-    cached_f_list = check_file_and_get_package_list(cached_f, create_cache=True)
+    cached_f_list = check_file_and_get_package_list(cached_f, create_cache=True, root_dir=root_dir)
 
     # Get the current package list.
     curr_list = []
@@ -275,29 +290,6 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
     TODO: give list of available pacman.
     """
     root_dir = REQUIREMENTS_ROOT_DIR
-    create_venv_conf = False
-    # Auto-recognition of a venv should come as an option,
-    # not to interfere with normal command (install a global package).
-    # if os.environ.get("VIRTUAL_ENV") is not None:
-    #     create_venv_conf = True
-    #     dir_name = os.path.realpath("./").split("/")[-1]
-    #     root_dir = "./"
-    #     if os.path.isfile("requirements.txt"):
-    #         print "found a requirements file"
-    #         REQUIREMENTS_FILES["PIP"] = "requirements.txt"
-    #         REQUIREMENTS_FILES["APT"] = "abelujo/apt-requirements.txt"
-    #         print REQUIREMENTS_FILES, root_dir
-    #         exit(0)
-
-    #     elif os.path.isfile(join(dir_name, "requirements.txt")):
-    #         print "req in project file, like django."
-    #         REQUIREMENTS_FILES["PIP"] = join(dir_name, "requirements.txt")
-    #         print REQUIREMENTS_FILES, root_dir
-
-    # else:
-    if True:
-        print "not in venv"
-        print REQUIREMENTS_FILES, root_dir
 
     req_files = REQUIREMENTS_FILES.items()
     req_files = list(REQUIREMENTS_FILES.items())
@@ -334,7 +326,7 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
         print("destination to write: ", dest)
         exit
 
-    check_conf_dir(create_venv_conf=create_venv_conf)
+    check_conf_dir()
     ret_codes = []
     for _, val in req_files:
         ret_codes.append(sync_packages(val, root_dir=root_dir))

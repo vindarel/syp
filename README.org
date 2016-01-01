@@ -1,27 +1,42 @@
 * Sync that package manager with my dotfiles
 
-Basic usage:
+We want to  (un)install packages (be it with apt,  pip, npm…) and save
+them in some dotfiles, in one single command.
+
+Basic usage: typing
 
 : meminstall foo
 
-installs package =foo= with the system package manager (like =apt=).
+will install package =foo= with the system package manager (like =apt=).
+
+To install a package with =pip= (globally):
 
 : meminstall --pm pip foo
 
-installs (globally) with =pip=.
+and to remove it:
 
 : meminstall --pm pip foo --rm
 
-removes it.
+
+We can add a message with =-m=. It will be appended on the same line:
+
+: meminstall --pm pip foo -m "foo does bar"
+
+
+We can edit  the list of packages for that  package maneger before the
+operations with =-e= (=--editor=):
+
+: meminstall --pm pip foo --rm -e
 
 So, recommended aliases:
 
 : alias rpip="meminstall --pm pip"
-: alias urpip="meminstall --pm pip --rm"
 
-* TODOs
+* TODOs and ideas
 
+- use a config file (ongoing)
 - auto-recognize a virtualenv
-- config file
-- call our editor
 - undo last action
+- shall we define only a relation  package manager -> file or whatever
+  -> package manager -> file. This would  allow to split our config in
+  many files (to have "mao.txt", "music.txt"…).

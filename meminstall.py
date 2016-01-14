@@ -13,13 +13,14 @@ program to add the package name to the right file.
 """
 
 from __future__ import print_function
-from builtins import input
-from io import open
 
 import operator
 import os
 import shutil
+import sys
+from builtins import input
 from functools import reduce
+from io import open
 from os.path import expanduser
 from os.path import join
 
@@ -28,15 +29,17 @@ from sigtools.modifiers import annotate
 from sigtools.modifiers import kwoargs
 from termcolor import colored
 
-
-try:
+CFG_FILE = "~/.meminstall/settings.py"
+cfg_file = expanduser(CFG_FILE)
+if os.path.isfile(cfg_file):
+    sys.path.insert(0, expanduser("~/.meminstall"))
     from settings import (REQUIREMENTS_ROOT_DIR,
                           REQUIREMENTS_FILES,
                           CONF,
                           SYSTEM_PACMAN)
-except Exception as e:
-    e = colored(e, "red")
-    print(e)
+
+else:
+    print("We didn't find settings at {}. Loading default settings.".format(cfg_file))
     #: The base directory where lie the configuration files.
     REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
 

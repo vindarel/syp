@@ -32,9 +32,10 @@ So, recommended aliases:
 
 : alias rpip="meminstall --pm pip"
 
+* Develop
+: pip install -e .
 * TODOs and ideas
 
-- use a config file (ongoing)
 - auto-recognize a virtualenv
 - undo last action
 - shall we define only a relation  package manager -> file or whatever

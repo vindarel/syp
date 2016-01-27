@@ -36,6 +36,7 @@ if os.path.isfile(cfg_file):
     from settings import (REQUIREMENTS_ROOT_DIR,
                           REQUIREMENTS_FILES,
                           CONF,
+                          DEFAULT_PACMAN,
                           SYSTEM_PACMAN)
 
 else:
@@ -63,6 +64,8 @@ else:
 
     #: System package manager, as a default. This will be induced on next version.
     SYSTEM_PACMAN = "apt-get"
+    #: Default name of the package manager
+    DEFAULT_PACMAN = "apt"
 
 def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     """Copy the package listings to the conf cache.
@@ -297,13 +300,24 @@ def run_editor(root_dir, conf_file):
 @annotate(pm="p", message="m", dest="d", editor="e")
 @kwoargs("pm", "message", "dest", "rm", "editor")
 def main(pm="", message="", dest="", rm=False, editor=False, *packages):
-    """
+    """rpack will check what's new in your config files, take the
+    arguments into account, and it will install and remove packages
+    accordingly. It uses a cache in ~/.rpack/.
 
-    pm: specify a package manager.
+    pm: set the package manager, according to your settings.
 
-    rm: remove installed packages. If no packages are specified, call $EDITOR on the configuration file.
+    message: comment to be written in the configuration file.
+
+    dest: <not implemented>
+
+    rm: remove the given packages. If no package is specified, call $EDITOR on the configuration file.
+
+    editor: call your shell's $EDITOR to edit the configuration file associated to the given package manager.
+
+    init: write the default settings to ~/.meminstall/settings.py
 
     TODO: give list of available pacman.
+
     """
     root_dir = REQUIREMENTS_ROOT_DIR
     req_files = REQUIREMENTS_FILES.items()
@@ -320,7 +334,6 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
         # Sync only the conf file of the current package manager.
         req_files = [tup for tup in req_files if tup[0] == pm]
         print("Let's use {} to install packages {} !".format(pm, " ".join(packages)))
-        print("with comment: " + message)
         # TODO: venv
         if not rm:
             write_packages(packages, message=message, conf_file=conf_file, root_dir=root_dir)

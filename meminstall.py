@@ -70,6 +70,9 @@ else:
 def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     """Copy the package listings to the conf cache.
     """
+    if not os.path.isfile(os.path.join(root_dir, req_file)):
+        print("The file {} does not exist.".format(req_file))
+        return
     curr_apt = join(expanduser(root_dir), req_file)
     cache_apt = join(expanduser(CONF), req_file)
     # Create new directories if needed.
@@ -225,10 +228,11 @@ def check_file_and_get_package_list(afile, create_cache=False, root_dir=None):
         packages = filter_packages(lines)
     else:
         if create_cache:
-            print("No cache. Will initialize for {}.".format(afile))
+            print("No cache for {}. Will initialize one.".format(afile))
             cache_init(afile, root_dir=root_dir)
         else:
             print("We don't find the package list at {}.".format(afile))
+            return None
 
     return packages
 
@@ -242,6 +246,9 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     cached_f = expanduser(join(CONF, req_file))
     cached_f_list = check_file_and_get_package_list(cached_f, create_cache=True, root_dir=root_dir)
 
+    if not cached_f_list:
+        return 1
+
     # Get the current package list.
     curr_list = []
     curr_f = expanduser(join(root_dir, req_file))
@@ -251,9 +258,10 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     to_install, to_delete = get_diff(cached_f_list, curr_list)
 
     # Pretty output
-    print("In {}:".format(req_file))
+    to_print = "In " + colored("{}:".format(req_file), "blue")
+
     if not len(to_install) and not len(to_delete):
-        print("\tnothing to do")
+        print(to_print + colored(" \u2714 nothing to do", "green"))
     else:
         txt = "\tFound {} packages to install: {}".format(len(to_install), to_install)
         if len(to_install):
@@ -323,17 +331,17 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
     req_files = REQUIREMENTS_FILES.items()
     req_files = list(REQUIREMENTS_FILES.items())
 
-    conf_file = get_conf_file(pm)
-    if not conf_file:
-        exit(1)
-    if editor:
-        run_editor(root_dir, conf_file)
-
-    # Deal with another package manager
+    # Deal with a specific package manager
     if pm:
         # Sync only the conf file of the current package manager.
         req_files = [tup for tup in req_files if tup[0] == pm]
         print("Let's use {} to install packages {} !".format(pm, " ".join(packages)))
+        conf_file = get_conf_file(pm)
+        if not conf_file:
+            exit(1)
+        if editor:
+            run_editor(root_dir, conf_file)
+
         # TODO: venv
         if not rm:
             write_packages(packages, message=message, conf_file=conf_file, root_dir=root_dir)
@@ -354,6 +362,7 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
         print("destination to write: ", dest)
         exit
 
+    # Do the job:
     check_conf_dir()
     ret_codes = []
     for _, val in req_files:

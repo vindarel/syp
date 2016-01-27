@@ -171,17 +171,19 @@ def write_packages(packages, conf_file=None, message=None, root_dir=""):
     """
     conf_file = expanduser(os.path.join(root_dir, conf_file))
     existing = read_packages(conf_file, root_dir=root_dir)
-    packages = list(packages)
-    for pack in packages:
-        if pack in existing:
-            print("'{}' is already present".format(pack))
-            packages.remove(pack)
+    existing = set(existing)
+    packages = set(list(packages))
+    to_install = packages - existing
+    already_present = packages - to_install
+    to_install = list(to_install)
+    for pack in already_present:
+        print("'{}' is already present".format(pack))
 
-    if packages:
+    if to_install:
         if os.path.isfile(conf_file):
             lines = []
             # Lines of packages, with the comment once inline.
-            for pack in packages:
+            for pack in to_install:
                 if message:
                     lines.append(u"{} \t# {}\n".format(pack, message))
                     message = None  # write it only once.
@@ -189,7 +191,7 @@ def write_packages(packages, conf_file=None, message=None, root_dir=""):
                     lines.append(u"{}\n".format(pack))
             with open(conf_file, "a") as f:
                 f.writelines(lines)
-                print("Added '{}' to {} package list...".format(" ".join(packages), conf_file))
+                print("Added '{}' to {} package list...".format(" ".join(to_install), conf_file))
                 return 0
         else:
             print("mmh... the config file doesn't exist: {}".format(conf_file))
@@ -291,6 +293,7 @@ def run_editor(root_dir, conf_file):
     return ret
 
 
+# Command line arguments is quickly done with clize.
 @annotate(pm="p", message="m", dest="d", editor="e")
 @kwoargs("pm", "message", "dest", "rm", "editor")
 def main(pm="", message="", dest="", rm=False, editor=False, *packages):

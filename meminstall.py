@@ -33,39 +33,13 @@ CFG_FILE = "~/.syp/settings.py"
 cfg_file = expanduser(CFG_FILE)
 if os.path.isfile(cfg_file):
     sys.path.insert(0, expanduser("~/.syp"))
-    from settings import (REQUIREMENTS_ROOT_DIR,
-                          REQUIREMENTS_FILES,
-                          CONF,
-                          DEFAULT_PACMAN,
-                          SYSTEM_PACMAN)
 
-else:
-    print("We didn't find settings at {}. Loading default settings.".format(cfg_file))
-    #: The base directory where lie the configuration files.
-    REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
+# else: use the default settings.py
+from settings import (REQUIREMENTS_ROOT_DIR,
+                      REQUIREMENTS_FILES,
+                      CONF,
+                      SYSTEM_PACMAN)
 
-    #: mapping package-manager -> config file.
-    # Shall we do "any name" -> package manager -> config file ?
-    # Where the pacman could be defined inside the file.
-
-    # The mapping could also be inplicit. If we have a file mao.txt, the
-    # command "syp --pm mao foo" will write foo to mao.txt and will
-    # use the package manager defined inside it.
-    REQUIREMENTS_FILES = {
-        "apt": "apt-all.txt",
-        "npm": "npm-requirements.txt",
-        "ruby": "ruby/ruby-packages.txt",
-        "gem": "ruby/ruby-packages.txt",
-        "pip": "pip.txt",
-    }
-
-    #: Where to put the config, where to cache the files.
-    CONF = "~/.syp/"
-
-    #: System package manager, as a default. This will be induced on next version.
-    SYSTEM_PACMAN = "apt-get"
-    #: Default name of the package manager
-    DEFAULT_PACMAN = "apt"
 
 def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     """Copy the package listings to the conf cache.
@@ -306,13 +280,13 @@ def run_editor(root_dir, conf_file):
 
 # Command line arguments is quickly done with clize.
 @annotate(pm="p", message="m", dest="d", editor="e")
-@kwoargs("pm", "message", "dest", "rm", "editor")
-def main(pm="", message="", dest="", rm=False, editor=False, *packages):
+@kwoargs("pm", "message", "dest", "rm", "editor", "init")
+def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packages):
     """syp will check what's new in your config files, take the
     arguments into account, and it will install and remove packages
     accordingly. It uses a cache in ~/.syp/.
 
-    pm: set the package manager, according to your settings.
+    pm: set the package manager, according to your settings. If not specified, it will work on all of them.
 
     message: comment to be written in the configuration file.
 
@@ -320,7 +294,7 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
 
     rm: remove the given packages. If no package is specified, call $EDITOR on the configuration file.
 
-    editor: call your shell's $EDITOR to edit the configuration file associated to the given package manager.
+    editor: call your shell's $EDITOR to edit the configuration file associated to the given package manager, before the rest.
 
     init: write the default settings to ~/.syp/settings.py
 
@@ -331,6 +305,16 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
     root_dir = REQUIREMENTS_ROOT_DIR
     req_files = REQUIREMENTS_FILES.items()
     req_files = list(REQUIREMENTS_FILES.items())
+
+    if init:
+        check_conf_dir("~/.syp/")
+        if not os.path.isfile(cfg_file):
+            copy_file("settings.py", cfg_file)
+            print("Done.")
+        else:
+            print("warning: the file {} already exists. Do nothing.".format(CFG_FILE))
+
+        exit(0)
 
     # Deal with a specific package manager
     if pm:

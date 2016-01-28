@@ -1,24 +1,21 @@
+# Default settings for syp.py
+# Create it with syp --init
+# and tweak them in ~/.syp/settings.py
 
-#: The base directory where lie the configuration files.
-REQUIREMENTS_ROOT_DIR = "~/dotfiles/requirements/"
+#: The base directory where lies the configuration files.
+REQUIREMENTS_ROOT_DIR = "~/dotfiles/"
 
-#: mapping package-manager -> config file.
-# Shall we do "any name" -> package manager -> config file ?
-# Where the pacman could be defined inside the file.
-
-# The mapping could also be inplicit. If we have a file mao.txt, the
-# command "meminstall --pm mao foo" will write foo to mao.txt and will
-# use the package manager defined inside it.
+#: a mapping: name of package manager (the shell command) -> name of
+# the config file to write all packages.
 REQUIREMENTS_FILES = {
-    "apt": "apt-all.txt",
-    "npm": "npm-requirements.txt",
-    "ruby": "ruby/ruby-packages.txt",
-    "gem": "ruby/ruby-packages.txt",
+    "apt": "apt.txt", # the path is prepended with the root directory above.
     "pip": "pip.txt",
+    "npm": "npm.txt",
+    "gem": "ruby.txt",
 }
 
 #: Where to put the config, where to cache the files.
-CONF = "~/.meminstall/"
+CONF = "~/.syp/"
 
-#: System package manager, as a default. This will be induced on next version.
+#: System package manager, as a default.
 SYSTEM_PACMAN = "apt-get"

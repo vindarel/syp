@@ -29,10 +29,10 @@ from sigtools.modifiers import annotate
 from sigtools.modifiers import kwoargs
 from termcolor import colored
 
-CFG_FILE = "~/.meminstall/settings.py"
+CFG_FILE = "~/.syp/settings.py"
 cfg_file = expanduser(CFG_FILE)
 if os.path.isfile(cfg_file):
-    sys.path.insert(0, expanduser("~/.meminstall"))
+    sys.path.insert(0, expanduser("~/.syp"))
     from settings import (REQUIREMENTS_ROOT_DIR,
                           REQUIREMENTS_FILES,
                           CONF,
@@ -49,7 +49,7 @@ else:
     # Where the pacman could be defined inside the file.
 
     # The mapping could also be inplicit. If we have a file mao.txt, the
-    # command "meminstall --pm mao foo" will write foo to mao.txt and will
+    # command "syp --pm mao foo" will write foo to mao.txt and will
     # use the package manager defined inside it.
     REQUIREMENTS_FILES = {
         "apt": "apt-all.txt",
@@ -60,7 +60,7 @@ else:
     }
 
     #: Where to put the config, where to cache the files.
-    CONF = "~/.meminstall/"
+    CONF = "~/.syp/"
 
     #: System package manager, as a default. This will be induced on next version.
     SYSTEM_PACMAN = "apt-get"
@@ -308,9 +308,9 @@ def run_editor(root_dir, conf_file):
 @annotate(pm="p", message="m", dest="d", editor="e")
 @kwoargs("pm", "message", "dest", "rm", "editor")
 def main(pm="", message="", dest="", rm=False, editor=False, *packages):
-    """rpack will check what's new in your config files, take the
+    """syp will check what's new in your config files, take the
     arguments into account, and it will install and remove packages
-    accordingly. It uses a cache in ~/.rpack/.
+    accordingly. It uses a cache in ~/.syp/.
 
     pm: set the package manager, according to your settings.
 
@@ -322,10 +322,11 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
 
     editor: call your shell's $EDITOR to edit the configuration file associated to the given package manager.
 
-    init: write the default settings to ~/.meminstall/settings.py
+    init: write the default settings to ~/.syp/settings.py
 
     TODO: give list of available pacman.
 
+    Check your settings in ~/syp/settings.py. Create them with syp --init.
     """
     root_dir = REQUIREMENTS_ROOT_DIR
     req_files = REQUIREMENTS_FILES.items()

@@ -1,4 +1,1 @@
-termcolor       # colored print
-clize           # command line interface from method's (kw)args
-six             # python 2 to 3 utilities
-future          # python 2 / 3 compatibility
+-e . # install libs from setup.py

@@ -1,43 +1,73 @@
-* Sync that package manager with my dotfiles
+* Sync your packages with your dotfiles
 
-We want to  (un)install packages (be it with apt,  pip, npm…) and save
-them in some dotfiles, in one single command.
+When we use a package manager (be it apt, pip, npm,…), we want to sync
+the list of installed packages  in requirement files.  We then declare
+a mapping that links a package manager to its requirements file:
 
-Basic usage: typing
+#+BEGIN_SRC python
+    REQUIREMENTS_ROOT_DIR = "~/dotfiles/"
+    REQUIREMENTS_FILES = {
+        "apt": "apt.txt",
+        "pip": "pip.txt",
+        "npm": "npm.txt",
+    }
+#+END_SRC
 
-: meminstall foo
+Note: see =syp --init=
 
-will install package =foo= with the system package manager (like =apt=).
+Note: tested on python 2.7 and 3.4
 
-To install a package with =pip= (globally):
+The  basic usage  is to  check  all of  them, and  install and  remove
+what's necessary (compared with the cache at =~/.syp/=):
 
-: meminstall --pm pip foo
+Example:
 
-and to remove it:
+: syp
 
-: meminstall --pm pip foo --rm
+can output:
+
+#+BEGIN_HTML
+ <img src="http://i.imgur.com/NXiddZB.png" </img>
+#+END_HTML
 
 
-We can add a message with =-m=. It will be appended on the same line:
+So obviously we can *set the package manager* we want to use and *give
+one or many packages to install*:
 
-: meminstall --pm pip foo -m "foo does bar"
+: syp --pm pip syp foo bar
+
+will append syp, foo and bar to the bottom of =~/dotfiles/pip.txt= and
+install them.
+
+So a suggested alias is
+
+: alias sypip="syp --pm pip "
+
+If no package manager is specified, we use the default one (see =settings.py=):
+
+To *remove packages*, use =--rm=:
+
+: syp --pm pip foo --rm
 
 
-We can edit  the list of packages for that  package maneger before the
+We can *add a message* with =-m=. It will be appended on the same line:
+
+: syp --pm pip foo -m "foo is a cool package"
+
+
+We can *edit  the list* of packages for that  package maneger before the
 operations with =-e= (=--editor=):
 
-: meminstall --pm pip foo --rm -e
-
-So, recommended aliases:
-
-: alias rpip="meminstall --pm pip"
+: syp --pm pip foo --rm -e
 
 * Develop
 : pip install -e .
 * TODOs and ideas
 
+- more tests
 - auto-recognize a virtualenv
 - undo last action
-- shall we define only a relation  package manager -> file or whatever
-  -> package manager -> file. This would  allow to split our config in
-  many files (to have "mao.txt", "music.txt"…).
+- auto commit
+- allow for more than a requirement file for one package manager.
+
+  Bust most of all… use [[https://gnu.org/software/guix/][Guix]] !

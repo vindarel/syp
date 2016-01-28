@@ -232,10 +232,10 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     to_install, to_delete = get_diff(cached_f_list, curr_list)
 
     # Pretty output
-    to_print = "In " + colored("{}:".format(req_file), "blue")
+    print("In " + colored("{}:".format(req_file), "blue"))
 
     if not len(to_install) and not len(to_delete):
-        print(to_print + colored(" \u2714 nothing to do", "green"))
+        print(colored(u"\t\u2714 nothing to do", "green"))
     else:
         txt = "\tFound {} packages to install: {}".format(len(to_install), to_install)
         if len(to_install):

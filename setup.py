@@ -1,11 +1,21 @@
+import os
 from setuptools import setup, find_packages
+
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 setup(
-    name = "rpack",
+    name = "syp",
     version = "0.1",
     packages = find_packages(),
-    scripts = ['meminstall.py', 'settings.py'],
+    scripts = ['syp.py', 'settings.py', 'README.org'],
 
-    install_requires = [],
+    install_requires = [
+        "termcolor", # colored print
+        "clize",     # build cli args from the method (kw)args
+        "six",
+        "future",
+    ],
 
     package_data = {
         # If any package contains *.txt or *.rst files, include them:
@@ -17,20 +27,26 @@ setup(
     # metadata for upload to PyPI
     author = "vindarel",
     author_email = "ehvince@mailz.org",
-    description = "Record installed packages in my dot files.",
-    long_description = "I want to install packages (from apt, pip, npm,...) and record them in my dot files with one single command.",
+    description = "Sync your packages in dotfiles.",
+    long_description = read('README.org'),
     license = "GNU GPLv3",
     keywords = "utility packages shell",
-    url = "https://gitlab.com/vindarel/meminstall",   # project home page, if any
+    url = "https://gitlab.com/vindarel/syp",
 
     entry_points = {
         "console_scripts": [
-            "rpack = meminstall:run",
+            "syp = syp:run",
         ],
     },
 
     tests_require = {
 
     },
+
+    classifiers = [
+        "Environment :: Console",
+        "License :: Public Domain",
+        "Topic :: Utilities",
+    ],
 
 )

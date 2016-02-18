@@ -43,9 +43,12 @@ from settings import (REQUIREMENTS_ROOT_DIR,
 
 def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     """Copy the package listings to the conf cache.
+
+    Create nested directories to mimic the dotfiles structure if needed.
     """
-    if not os.path.isfile(os.path.join(root_dir, req_file)):
-        print("The file {} does not exist.".format(req_file))
+    fullfile = expanduser(join(root_dir, req_file))
+    if not os.path.isfile(fullfile):
+        print("The file {} does not exist. Maybe you should check the settings at ~/.syp/settings.py or use syp --init.".format(fullfile))
         return
     curr_apt = join(expanduser(root_dir), req_file)
     cache_apt = join(expanduser(CONF), req_file)
@@ -196,8 +199,9 @@ def check_file_and_get_package_list(afile, create_cache=False, root_dir=None):
     Create the cache file if appropriate.
     """
     packages = []
-    if os.path.isfile(afile):
-        with open(afile, "rt") as f:
+    fullfile = expanduser(join(CONF, afile))
+    if os.path.isfile(fullfile):
+        with open(fullfile, "rt") as f:
             lines = f.readlines()
         packages = filter_packages(lines)
     else:
@@ -218,7 +222,7 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
 
     # Get the previous state
     cached_f = expanduser(join(CONF, req_file))
-    cached_f_list = check_file_and_get_package_list(cached_f, create_cache=True, root_dir=root_dir)
+    cached_f_list = check_file_and_get_package_list(req_file, create_cache=True, root_dir=root_dir)
 
     if not cached_f_list:
         return 1

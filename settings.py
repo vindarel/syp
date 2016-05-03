@@ -10,6 +10,7 @@ REQUIREMENTS_ROOT_DIR = "~/dotfiles/"
 REQUIREMENTS_FILES = {
     "apt": "apt.txt", # the path is prepended with the root directory above.
     "pip": "pip.txt",
+    "pip3": "pip3.txt",
     "npm": "npm.txt",
     "gem": "ruby.txt",
 }

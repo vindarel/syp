@@ -77,14 +77,16 @@ def get_shell_cmd(req_file, rm=False):
     req_file: str representing the file we read the packages from.
     """
     pacman = None
-    if req_file == REQUIREMENTS_FILES["apt"]:
+    if req_file == REQUIREMENTS_FILES.get("apt"):
         pacman = "apt-get {} -y"
-    elif req_file == REQUIREMENTS_FILES["npm"]:
+    elif req_file == REQUIREMENTS_FILES.get("npm"):
         pacman = "npm {} -g"
-    elif req_file == REQUIREMENTS_FILES["ruby"]:
+    elif req_file == REQUIREMENTS_FILES.get("ruby"):
         pacman = "gem {}"
-    elif req_file == REQUIREMENTS_FILES["pip"]:
+    elif req_file == REQUIREMENTS_FILES.get("pip"):
         pacman = "pip {}"
+    elif req_file == REQUIREMENTS_FILES.get("pip3"):
+        pacman = "pip3 {}"
     else:
         print("Package manager not found. Abort.")
         return 0
@@ -111,11 +113,15 @@ def run_package_manager(to_install, to_delete, req_file):
             if to_delete:
                 print("Removing…")
                 cmd_rm = get_shell_cmd(req_file, rm=True)
+                if not cmd_rm:
+                    return 0
                 cmd_rm = " ".join([cmd_rm] + to_delete)
                 ret_rm = os.system(cmd_rm)
 
             if to_install:
                 cmd_install = get_shell_cmd(req_file)
+                if not cmd_install:
+                    return 0
                 cmd_install = " ".join([cmd_install] + to_install)
                 print("Installing…")
                 ret_install = os.system(cmd_install)

@@ -247,13 +247,17 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     if not len(to_install) and not len(to_delete):
         print(colored(u"\t\u2714 nothing to do", "green"))
     else:
-        txt = "\tFound {} packages to install: {}".format(len(to_install), to_install)
         if len(to_install):
+            txt = "\tFound {} packages to install: {}".format(len(to_install), ", ".join(to_install))
             txt = colored(txt, "green")
+        else:
+            txt = "\tNothing to install"
         print(txt)
-        txt = "\tFound {} packages to delete: {}".format(len(to_delete), to_delete)
         if len(to_delete):
+            txt = "\tFound {} packages to delete: {}".format(len(to_delete), to_delete)
             txt = colored(txt, "red")
+        else:
+            txt = "\tNothing to delete"
         print(txt)
 
     # Run the package managers.

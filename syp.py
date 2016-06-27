@@ -70,35 +70,34 @@ def get_diff(cached_list, curr_list):
     to_delete = list(set(cached_list) - set(curr_list))
     return (to_install, to_delete)
 
-def get_shell_cmd(req_file, rm=False):
+def get_shell_cmd(req_file, rm=False, pm=None):
     """Form the shell command with the right package manager.
     It must be ready to append the packages list.
 
-    req_file: str representing the file we read the packages from.
+    - req_file: str representing the file we read the packages from.
+
+    - pm: package manager given on the command line.
     """
     pacman = None
-    if req_file == REQUIREMENTS_FILES.get("apt"):
-        pacman = "apt-get {} -y"
-    elif req_file == REQUIREMENTS_FILES.get("npm"):
-        pacman = "npm {} -g"
-    elif req_file == REQUIREMENTS_FILES.get("ruby"):
-        pacman = "gem {}"
-    elif req_file == REQUIREMENTS_FILES.get("pip"):
-        pacman = "pip {}"
-    elif req_file == REQUIREMENTS_FILES.get("pip3"):
-        pacman = "pip3 {}"
-    else:
-        print("Package manager not found. Abort.")
-        return 0
-
     un_install = "install"
     if rm:
         un_install = "remove"
-    pacman = pacman.format(un_install)
-    cmd = "sudo {}".format(pacman)
+
+    if not pm:
+        print("Package manager not found. Abort.")
+        return 0
+
+    import ipdb; ipdb.set_trace()
+    # cmd of the form: [sudo] apt-get install -y
+    cmd = "{} {} {}".format(
+        REQUIREMENTS_FILES.get(pm).get('sudo', 'sudo'), # sudo by default
+        REQUIREMENTS_FILES.get(pm).get('pacman', pm),
+        REQUIREMENTS_FILES.get(pm).get(un_install, un_install),
+        )
+
     return cmd
 
-def run_package_manager(to_install, to_delete, req_file):
+def run_package_manager(to_install, to_delete, req_file, pm=None):
     """Construct the command, run the right package manager.
 
     Install and delete packages.
@@ -112,14 +111,14 @@ def run_package_manager(to_install, to_delete, req_file):
         if go in ["y", "yes", "o", ""]:
             if to_delete:
                 print("Removing…")
-                cmd_rm = get_shell_cmd(req_file, rm=True)
+                cmd_rm = get_shell_cmd(req_file, rm=True, pm=pm)
                 if not cmd_rm:
                     return 0
                 cmd_rm = " ".join([cmd_rm] + to_delete)
                 ret_rm = os.system(cmd_rm)
 
             if to_install:
-                cmd_install = get_shell_cmd(req_file)
+                cmd_install = get_shell_cmd(req_file, pm=pm)
                 if not cmd_install:
                     return 0
                 cmd_install = " ".join([cmd_install] + to_install)
@@ -223,8 +222,7 @@ def check_file_and_get_package_list(afile, create_cache=False, root_dir=None):
 def copy_file(curr_f, cached_f):
     shutil.copyfile(curr_f, cached_f)
 
-def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
-
+def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR, pm=None):
 
     # Get the previous state
     cached_f = expanduser(join(CONF, req_file))
@@ -261,7 +259,7 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
         print(txt)
 
     # Run the package managers.
-    ret = run_package_manager(to_install, to_delete, req_file)
+    ret = run_package_manager(to_install, to_delete, req_file, pm=pm)
     if ret == 0:
         #XXX check which of install or rm worked, write corresponding item in file.
         copy_file(curr_f, cached_f)
@@ -278,7 +276,7 @@ def check_conf_dir(conf=CONF, create_venv_conf=False):
 def get_conf_file(pacman):
     """Return the configuration file of the given package manager.
     """
-    conf = REQUIREMENTS_FILES.get(pacman.lower())
+    conf = REQUIREMENTS_FILES.get(pacman.lower()).get('file')
     if not conf:
         print("There is no configuration file for this package manager. Abort.")
         return None
@@ -333,7 +331,7 @@ def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packag
     # Deal with a specific package manager
     if pm:
         # Sync only the conf file of the current package manager.
-        req_files = [tup for tup in req_files if tup[0] == pm]
+        req_files = [tup[1]['file'] for tup in req_files if tup[0] == pm]
         print("Let's use {} to install packages {} !".format(pm, " ".join(packages)))
         conf_file = get_conf_file(pm)
         if not conf_file:
@@ -364,8 +362,8 @@ def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packag
     # Do the job:
     check_conf_dir()
     ret_codes = []
-    for _, val in req_files:
-        ret_codes.append(sync_packages(val, root_dir=root_dir))
+    for req_file in req_files:
+        ret_codes.append(sync_packages(req_file, root_dir=root_dir, pm=pm))
 
     exit(reduce(operator.or_, ret_codes, 0))
 

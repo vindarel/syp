@@ -5,14 +5,38 @@
 #: The base directory where lies the configuration files.
 REQUIREMENTS_ROOT_DIR = "~/dotfiles/"
 
-#: a mapping: name of package manager (the shell command) -> name of
-# the config file to write all packages.
+#: a mapping: name of package manager (the shell command) -> dict
+# with:
+# - the name of the config file to write all packages,
+# - the name of # the package manager (if different from key),
+# - the "install" command # (if not "install"),
+# - the uninstall command.
 REQUIREMENTS_FILES = {
-    "apt": "apt.txt", # the path is prepended with the root directory above.
-    "pip": "pip.txt",
-    "pip3": "pip3.txt",
-    "npm": "npm.txt",
-    "gem": "ruby.txt",
+    "apt": {
+        "file": "apt.txt", # the path is prepended with the root directory above.
+        "pacman": "apt-get",
+        "install": "install -y",
+        "uninstall": "remove",
+        },
+    "pip": {
+        "file": "pip.txt",
+        },
+    "pip3": {
+        "file": "pip3.txt",
+        },
+    "npm": {
+        "file": "npm.txt",
+        "uninstall": "remove",
+        },
+    "gem": {
+        "file": "ruby.txt",
+        },
+    "docker": {
+        "file": "docker.txt",
+        "install": "pull",
+        "uninstall": "rm",
+        "sudo": "",
+        },
 }
 
 #: Where to put the config, where to cache the files.

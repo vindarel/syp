@@ -87,7 +87,6 @@ def get_shell_cmd(req_file, rm=False, pm=None):
         print("Package manager not found. Abort.")
         return 0
 
-    import ipdb; ipdb.set_trace()
     # cmd of the form: [sudo] apt-get install -y
     cmd = "{} {} {}".format(
         REQUIREMENTS_FILES.get(pm).get('sudo', 'sudo'), # sudo by default
@@ -123,6 +122,7 @@ def run_package_manager(to_install, to_delete, req_file, pm=None):
                     return 0
                 cmd_install = " ".join([cmd_install] + to_install)
                 print("Installing…")
+                print(cmd_install)
                 ret_install = os.system(cmd_install)
 
             return ret_install or ret_rm

@@ -26,6 +26,7 @@ REQUIREMENTS_FILES = {
         },
     "npm": {
         "file": "npm.txt",
+        "install": "install -g",
         "uninstall": "remove",
         },
     "gem": {

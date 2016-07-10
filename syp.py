@@ -31,10 +31,11 @@ from termcolor import colored
 
 CFG_FILE = "~/.syp/settings.py"
 cfg_file = expanduser(CFG_FILE)
+# Set the python path to import the user settings.
 if os.path.isfile(cfg_file):
     sys.path.insert(0, expanduser("~/.syp"))
 
-# else: use the default settings.py
+# If there is no user settings, we import the default settings anyway.
 from settings import (REQUIREMENTS_ROOT_DIR,
                       REQUIREMENTS_FILES,
                       CONF,
@@ -276,7 +277,13 @@ def check_conf_dir(conf=CONF, create_venv_conf=False):
 def get_conf_file(pacman):
     """Return the configuration file of the given package manager.
     """
-    conf = REQUIREMENTS_FILES.get(pacman.lower()).get('file')
+    conf = REQUIREMENTS_FILES.get(pacman.lower())
+    if not conf:
+        print("The {} package manager is unknown. Choice is one of: {}".format(pacman.lower(),
+                                                                               ", ".join(REQUIREMENTS_FILES.keys())))
+        exit(1)
+
+    conf = conf.get('file')
     if not conf:
         print("There is no configuration file for this package manager. Abort.")
         return None

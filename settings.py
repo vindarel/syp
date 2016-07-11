@@ -32,6 +32,14 @@ REQUIREMENTS_FILES = {
     "gem": {
         "file": "ruby.txt",
         },
+
+    "guix": {
+        "file": "guix.txt",
+        "pacman": "guix",
+        "install": "guix package -i",
+        "uninstall": "guix package -r",
+        },
+
     "docker": {
         "file": "docker.txt",
         "install": "pull",

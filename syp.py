@@ -224,13 +224,12 @@ def copy_file(curr_f, cached_f):
     shutil.copyfile(curr_f, cached_f)
 
 def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR, pm=None):
+    """Install or delete packages.
+    """
 
     # Get the previous state
     cached_f = expanduser(join(CONF, req_file))
     cached_f_list = check_file_and_get_package_list(req_file, create_cache=True, root_dir=root_dir)
-
-    if not cached_f_list:
-        return 1
 
     # Get the current package list.
     curr_list = []

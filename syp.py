@@ -82,7 +82,7 @@ def get_shell_cmd(req_file, rm=False, pm=None):
     pacman = None
     un_install = "install"
     if rm:
-        un_install = "remove"
+        un_install = "uninstall"
 
     if not pm:
         print("Package manager not found. Abort.")

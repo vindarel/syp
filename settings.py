@@ -15,7 +15,7 @@ REQUIREMENTS_FILES = {
     "apt": {
         "file": "apt.txt", # the path is prepended with the root directory above.
         "pacman": "apt-get",
-        "install": "install -y",
+        "install": "install -y --force-yes",
         "uninstall": "remove",
         },
     "pip": {

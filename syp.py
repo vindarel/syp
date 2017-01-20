@@ -228,7 +228,15 @@ def copy_file(curr_f, cached_f):
 
 def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR, pm=None):
     """Install or delete packages.
+
+    - req_file: (string) name of a file, like "apt.txt"
+
+    return: a return code (int).
     """
+
+    if not os.path.isfile(expanduser(join(CONF, req_file))):
+        print("We don't find the package list at {}.".format(req_file))
+        return 0
 
     # Get the previous state
     cached_f = expanduser(join(CONF, req_file))
@@ -319,13 +327,13 @@ def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packag
 
     init: write the default settings to ~/.syp/settings.py
 
-    TODO: give list of available pacman.
+    XXX: give a list of available pacman.
 
     Check your settings in ~/syp/settings.py. Create them with syp --init.
     """
     root_dir = REQUIREMENTS_ROOT_DIR
     req_files = REQUIREMENTS_FILES.items()
-    req_files = list(REQUIREMENTS_FILES.items())
+    req_files = [it[1]['file'] for it in list(REQUIREMENTS_FILES.items())]
 
     if init:
         check_conf_dir("~/.syp/")

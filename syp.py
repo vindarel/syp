@@ -178,7 +178,12 @@ def write_packages(packages, conf_file=None, message=None, root_dir=""):
             # Lines of packages, with the comment once inline.
             for pack in to_install:
                 if message:
-                    lines.append("{} \t# {}\n".format(pack, message))
+                    try:
+                        lines.append("{} \t# {}\n".format(pack, message))
+                    except UnicodeDecodeError:
+                        message = message.decode('utf8')
+                        lines.append("{} \t# {}\n".format(pack, message))
+
                     message = None  # write it only once.
                 else:
                     lines.append("{}\n".format(pack))

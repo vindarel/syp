@@ -25,6 +25,7 @@ from io import open
 from os.path import expanduser
 from os.path import join
 
+import addict
 import clize
 from future.utils import exec_
 from sigtools.modifiers import annotate
@@ -75,33 +76,34 @@ def get_diff(cached_list, curr_list):
     to_delete = list(set(cached_list) - set(curr_list))
     return (to_install, to_delete)
 
-def get_shell_cmd(req_file, rm=False, pm=None):
+def get_shell_cmd(pmconf, rm=False):
     """Form the shell command with the right package manager.
     It must be ready to append the packages list.
 
-    - req_file: str representing the file we read the packages from.
+    - pmconf: tuple: name of pm, dict with conf (file, pacman, etc).
 
-    - pm: package manager given on the command line.
+    Return: a cmd ready to run (str).
     """
     pacman = None
     un_install = "install"
     if rm:
         un_install = "uninstall"
 
-    if not pm:
+    if not pmconf:
         print("Package manager not found. Abort.")
         return 0
 
     # cmd of the form: [sudo] apt-get install -y
+    conf = pmconf[1]
     cmd = "{} {} {}".format(
-        REQUIREMENTS_FILES.get(pm).get('sudo', 'sudo'), # sudo by default
-        REQUIREMENTS_FILES.get(pm).get('pacman', pm),
-        REQUIREMENTS_FILES.get(pm).get(un_install, un_install),
+        conf.get('sudo', 'sudo'), # sudo by default
+        conf.get('pacman', pmconf[0]),
+        conf.get(un_install, un_install),
         )
 
     return cmd
 
-def run_package_manager(to_install, to_delete, req_file, pm=None):
+def run_package_manager(to_install, to_delete, pmconf):
     """Construct the command, run the right package manager.
 
     Install and delete packages.
@@ -115,14 +117,14 @@ def run_package_manager(to_install, to_delete, req_file, pm=None):
         if go in ["y", "yes", "o", ""]:
             if to_delete:
                 print("Removing...")
-                cmd_rm = get_shell_cmd(req_file, rm=True, pm=pm)
+                cmd_rm = get_shell_cmd(pmconf, rm=True)
                 if not cmd_rm:
                     return 0
                 cmd_rm = " ".join([cmd_rm] + to_delete)
                 ret_rm = os.system(cmd_rm)
 
             if to_install:
-                cmd_install = get_shell_cmd(req_file, pm=pm)
+                cmd_install = get_shell_cmd(pmconf)
                 if not cmd_install:
                     return 0
                 cmd_install = " ".join([cmd_install] + to_install)
@@ -232,32 +234,34 @@ def check_file_and_get_package_list(afile, create_cache=False, root_dir=None):
 def copy_file(curr_f, cached_f):
     shutil.copyfile(curr_f, cached_f)
 
-def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR, pm=None):
+def sync_packages(pmconf, root_dir=REQUIREMENTS_ROOT_DIR):
     """Install or delete packages.
 
-    - req_file: (string) name of a file, like "apt.txt"
+    - pmconf: tuple of a package manager config: pmconf[0] is the pm,
+      pmconf[1] a dict with 'file', 'install', 'pacman' etc.
 
     return: a return code (int).
-    """
 
-    if not os.path.isfile(expanduser(join(CONF, req_file))):
-        print("We don't find the package list at {}.".format(req_file))
+    """
+    conf = addict.Dict(pmconf[1])
+    if not os.path.isfile(expanduser(join(CONF, conf.file))):
+        print("We don't find the package list at {}.".format(conf.file))
         return 0
 
     # Get the previous state
-    cached_f = expanduser(join(CONF, req_file))
-    cached_f_list = check_file_and_get_package_list(req_file, create_cache=True, root_dir=root_dir)
+    cached_f = expanduser(join(CONF, conf.file))
+    cached_f_list = check_file_and_get_package_list(conf.file, create_cache=True, root_dir=root_dir)
 
     # Get the current package list.
     curr_list = []
-    curr_f = expanduser(join(root_dir, req_file))
+    curr_f = expanduser(join(root_dir, conf.file))
     curr_list = check_file_and_get_package_list(curr_f)
 
     # Diff: which are new, which are to be deleted ?
     to_install, to_delete = get_diff(cached_f_list, curr_list)
 
     # Pretty output
-    print("In " + colored("{}:".format(req_file), "blue"))
+    print("In " + colored("{}:".format(conf.file), "blue"))
 
     if not len(to_install) and not len(to_delete):
         print(colored("\t\u2714 nothing to do", "green"))
@@ -276,7 +280,7 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR, pm=None):
         print(txt)
 
     # Run the package managers.
-    ret = run_package_manager(to_install, to_delete, req_file, pm=pm)
+    ret = run_package_manager(to_install, to_delete, pmconf)
     if ret == 0:
         #XXX check which of install or rm worked, write corresponding item in file.
         copy_file(curr_f, cached_f)
@@ -339,7 +343,6 @@ def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packag
     """
     root_dir = REQUIREMENTS_ROOT_DIR
     req_files = REQUIREMENTS_FILES.items()
-    req_files = [it[1]['file'] for it in list(REQUIREMENTS_FILES.items())]
 
     if init:
         check_conf_dir("~/.syp/")
@@ -354,7 +357,7 @@ def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packag
     # Deal with a specific package manager
     if pm:
         # Sync only the conf file of the current package manager.
-        req_files = [tup[1]['file'] for tup in req_files if tup[0] == pm]
+        req_files = [tup for tup in req_files if tup[0] == pm]
         print("Let's use {} to install packages {} !".format(pm, " ".join(packages)))
         conf_file = get_conf_file(pm)
         if not conf_file:
@@ -386,7 +389,7 @@ def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packag
     check_conf_dir()
     ret_codes = []
     for req_file in req_files:
-        ret_codes.append(sync_packages(req_file, root_dir=root_dir, pm=pm))
+        ret_codes.append(sync_packages(req_file, root_dir=root_dir))
 
     exit(reduce(operator.or_, ret_codes, 0))
 

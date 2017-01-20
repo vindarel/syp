@@ -15,6 +15,7 @@ setup(
         "clize",     # build cli args from the method (kw)args
         "six",
         "future",
+        "addict",
     ],
 
     package_data = {

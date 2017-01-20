@@ -1,6 +1,18 @@
 # Default settings for syp.py
-# Create it with syp --init
-# and tweak them in ~/.syp/settings.py
+
+"""
+Create this file with syp --init
+and tweak the settings in ~/.syp/settings.py.
+
+One can overwrite the REQUIREMENTS_FILES dictionnary:
+
+REQUIREMENTS_FILES['apt'] = {
+    "file": "my-apt-requirements.txt",
+    "pacman": "aptitude",
+    "install": "install -y",
+    "uninstall": "remove",
+}
+"""
 
 #: The base directory where lies the configuration files.
 REQUIREMENTS_ROOT_DIR = "~/dotfiles/"
@@ -8,7 +20,7 @@ REQUIREMENTS_ROOT_DIR = "~/dotfiles/"
 #: a mapping: name of package manager (the shell command) -> dict
 # with:
 # - the name of the config file to write all packages,
-# - the name of # the package manager (if different from key),
+# - the name of the package manager (if different from key),
 # - the "install" command # (if not "install"),
 # - the uninstall command.
 REQUIREMENTS_FILES = {

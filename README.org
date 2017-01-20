@@ -5,20 +5,35 @@ the list of installed packages  in requirement files.  We then declare
 a mapping that links a package manager to its requirements file:
 
 #+BEGIN_SRC python
-    REQUIREMENTS_ROOT_DIR = "~/dotfiles/"
-    REQUIREMENTS_FILES = {
-        "apt": "apt.txt",
-        "pip": "pip.txt",
-        "npm": "npm.txt",
-    }
+REQUIREMENTS_ROOT_DIR = "~/dotfiles/"
+REQUIREMENTS_FILES = {
+    "apt": {
+        "file": "apt.txt", # => ~/dotfiles/apt.txt
+        "pacman": "apt-get",
+        "install": "install -y --force-yes",
+        "uninstall": "remove",
+        },
+    # and so on for pip, pip3, gem, npm, etc
+}
 #+END_SRC
 
-Note: see =syp --init=
+and we call
 
-Note: tested on python 2.7 and 3.4
+: syp --pm apt foo bar
 
-The  basic usage  is to  check  all of  them, and  install and  remove
-what's necessary (compared with the cache at =~/.syp/=):
+to add the two packages "foo" and "bar" in =~/dotfiles/apt.txt= and at
+the same  time, to check if  this list has been  edited manually (with
+packages added or removed) and  act accordingly (we make diffs against
+the cache at =~/.syp/apt.txt=).
+
+See the command =syp --init= and the Settings section below.
+
+Tested on python 2.7 and 3.4.
+
+** Usage
+
+The basic usage  is to check all of the  package managers, and install
+and remove what's necessary:
 
 Example:
 
@@ -31,19 +46,21 @@ can output:
 #+END_HTML
 
 
-So obviously we can *set the package manager* we want to use and *give
-one or many packages to install*:
+We set the package manager with  =--pm= and *give one or many packages
+to install*:
 
 : syp --pm pip syp foo bar
 
-will append syp, foo and bar to the bottom of =~/dotfiles/pip.txt= and
-install them.
+will   append   "syp",   "foo"   and    "bar"   at   the   bottom   of
+=~/dotfiles/pip.txt= (if they are not there yet), check if pip.txt was
+manually edited, and suggest a list of packages to install and remove.
 
 So a suggested alias is
 
 : alias sypip="syp --pm pip "
 
-If no package manager is specified, we use the default one (see =settings.py=):
+If  no package  manager is  specified, *we  use apt  by default*  (see
+Settings below).
 
 To *remove packages*, use =--rm=:
 
@@ -59,6 +76,34 @@ We can *edit  the list* of packages for that  package maneger before the
 operations with =-e= (=--editor=):
 
 : syp --pm pip foo --rm -e
+
+* Settings
+
+The  default settings  come  with a  configuration  for =apt=,  =pip=,
+=pip3=, =gem=, =npm=, =docker= and =guix=.
+
+The user settings, stored at =~/.syp/settings.py=, is a regular python
+ file that will  be =exec='ed on startup.   So, if you want  to add or
+ overide  a package  manager settings,  edit the  =REQUIREMENTS_FILES=
+ dictionnary  accordingly. Only the key "file" is required:
+
+#+BEGIN_SRC python
+REQUIREMENTS_FILES['apt'] = {
+    "file": "requirements-apt.txt", # required. appended to REQUIREMENTS_ROOT_DIR
+    "pacman": "aptitude",           # by default, same as the package manager name, here 'apt'
+    "install": "install -y",        # 'install' by default
+    "uninstall": "remove",          # 'uninstall' by default.
+}
+#+END_SRC
+
+See also
+#+BEGIN_SRC python
+#: The base directory where lies the configuration files.
+REQUIREMENTS_ROOT_DIR = "~/dotfiles/"
+
+#: System package manager, as a default.
+SYSTEM_PACMAN = "apt-get"
+#+END_SRC
 
 * Develop
 : pip install -e .

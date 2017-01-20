@@ -25,21 +25,24 @@ from os.path import expanduser
 from os.path import join
 
 import clize
+from future.utils import exec_
 from sigtools.modifiers import annotate
 from sigtools.modifiers import kwoargs
 from termcolor import colored
 
+# Import the default settings.
+from settings import CONF
+from settings import REQUIREMENTS_FILES
+from settings import REQUIREMENTS_ROOT_DIR
+from settings import SYSTEM_PACMAN
+
 CFG_FILE = "~/.syp/settings.py"
 cfg_file = expanduser(CFG_FILE)
-# Set the python path to import the user settings.
-if os.path.isfile(cfg_file):
-    sys.path.insert(0, expanduser("~/.syp"))
 
-# If there is no user settings, we import the default settings anyway.
-from settings import (REQUIREMENTS_ROOT_DIR,
-                      REQUIREMENTS_FILES,
-                      CONF,
-                      SYSTEM_PACMAN)
+# Overwrite the default settings with the user's own.
+with open(cfg_file, "rb") as fd:
+    user_config = fd.read()
+exec_(user_config, globals(), locals())
 
 
 def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
@@ -110,7 +113,7 @@ def run_package_manager(to_install, to_delete, req_file, pm=None):
         ret_install = 0
         if go in ["y", "yes", "o", ""]:
             if to_delete:
-                print("Removing…")
+                print(u"Removing...")
                 cmd_rm = get_shell_cmd(req_file, rm=True, pm=pm)
                 if not cmd_rm:
                     return 0
@@ -122,7 +125,7 @@ def run_package_manager(to_install, to_delete, req_file, pm=None):
                 if not cmd_install:
                     return 0
                 cmd_install = " ".join([cmd_install] + to_install)
-                print("Installing…")
+                print(u"Installing...")
                 print(cmd_install)
                 ret_install = os.system(cmd_install)
 

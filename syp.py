@@ -13,6 +13,7 @@ program to add the package name to the right file.
 """
 
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import operator
 import os
@@ -113,7 +114,7 @@ def run_package_manager(to_install, to_delete, req_file, pm=None):
         ret_install = 0
         if go in ["y", "yes", "o", ""]:
             if to_delete:
-                print(u"Removing...")
+                print("Removing...")
                 cmd_rm = get_shell_cmd(req_file, rm=True, pm=pm)
                 if not cmd_rm:
                     return 0
@@ -125,7 +126,7 @@ def run_package_manager(to_install, to_delete, req_file, pm=None):
                 if not cmd_install:
                     return 0
                 cmd_install = " ".join([cmd_install] + to_install)
-                print(u"Installing...")
+                print("Installing...")
                 print(cmd_install)
                 ret_install = os.system(cmd_install)
 
@@ -177,10 +178,10 @@ def write_packages(packages, conf_file=None, message=None, root_dir=""):
             # Lines of packages, with the comment once inline.
             for pack in to_install:
                 if message:
-                    lines.append(u"{} \t# {}\n".format(pack, message))
+                    lines.append("{} \t# {}\n".format(pack, message))
                     message = None  # write it only once.
                 else:
-                    lines.append(u"{}\n".format(pack))
+                    lines.append("{}\n".format(pack))
             with open(conf_file, "a") as f:
                 f.writelines(lines)
                 print("Added '{}' to {} package list...".format(" ".join(to_install), conf_file))
@@ -254,7 +255,7 @@ def sync_packages(req_file, root_dir=REQUIREMENTS_ROOT_DIR, pm=None):
     print("In " + colored("{}:".format(req_file), "blue"))
 
     if not len(to_install) and not len(to_delete):
-        print(colored(u"\t\u2714 nothing to do", "green"))
+        print(colored("\t\u2714 nothing to do", "green"))
     else:
         if len(to_install):
             txt = "\tFound {} packages to install: {}".format(len(to_install), ", ".join(to_install))

@@ -40,15 +40,16 @@ from settings import SYSTEM_PACMAN
 
 
 def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
-    """Copy the package listings to the conf cache.
+    """Create the cache file for req_file. Don't copy its content yet.
 
     Create nested directories to mimic the dotfiles structure if needed.
+
+    Return None for an error, [] otherwise.
     """
     fullfile = expanduser(join(root_dir, req_file))
     if not os.path.isfile(fullfile):
-        print("The file {} does not exist. Maybe you should check the settings at ~/.syp/settings.py or use syp --init.".format(fullfile))
-        return
-    curr_apt = join(expanduser(root_dir), req_file)
+        print("The file {} does not exist, we couldn't create a cache.\nYou should check the REQUIREMENTS_ROOT_DIR variable at ~/.syp/settings.py.".format(fullfile))
+        return None
     cache_apt = join(expanduser(CONF), req_file)
     # Create new directories if needed.
     split = req_file.split("/")[0:-1]
@@ -56,8 +57,8 @@ def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
         maybe_dir = join(expanduser(CONF), split[i:i+1][0])
         if not os.path.isdir(maybe_dir):
             os.makedirs(expanduser(maybe_dir))
-    # At last, copy it.
-    shutil.copyfile(curr_apt, cache_apt)
+    os.system("touch {}".format(cache_apt))
+    return []
 
 def get_diff(cached_list, curr_list):
     """Diff two lists, return a tuple of lists to be installed, to be
@@ -205,7 +206,7 @@ def erase_packages(packages, conf_file=None, message=None, root_dir=""):
             f.writelines(lines)
             print("Removed {} from {} package list.".format(", ".join(packages), conf_file))
 
-def check_file_and_get_package_list(afile, create_cache=False, root_dir=None):
+def check_file_and_get_package_list(afile, create_cache=False, root_dir=""):
     """From a given file, read its package list.
     Create the cache file if appropriate.
     """
@@ -217,10 +218,11 @@ def check_file_and_get_package_list(afile, create_cache=False, root_dir=None):
         packages = filter_packages(lines)
     else:
         if create_cache:
-            print("No cache for {}. Will initialize one.".format(afile))
-            cache_init(afile, root_dir=root_dir)
+            pkgname = colored("{}".format(join(root_dir, afile)), "blue")
+            print("No cache found for {}. Let's create one.".format(pkgname))
+            return cache_init(afile, root_dir=root_dir)
         else:
-            print("We don't find the package list at {}.".format(afile))
+            print("We don't find the package list at {}.\n".format(join(root_dir, afile)))
             return None
 
     return packages
@@ -228,7 +230,7 @@ def check_file_and_get_package_list(afile, create_cache=False, root_dir=None):
 def copy_file(curr_f, cached_f):
     shutil.copyfile(curr_f, cached_f)
 
-def sync_packages(pmconf, root_dir=REQUIREMENTS_ROOT_DIR):
+def sync_packages(pmconf, root_dir=""):
     """Install or delete packages.
 
     - pmconf: tuple of a package manager config: pmconf[0] is the pm,
@@ -237,10 +239,8 @@ def sync_packages(pmconf, root_dir=REQUIREMENTS_ROOT_DIR):
     return: a return code (int).
 
     """
+    ret = 0
     conf = addict.Dict(pmconf[1])
-    if not os.path.isfile(expanduser(join(CONF, conf.file))):
-        print("We don't find the package list at {}.".format(conf.file))
-        return 0
 
     # Get the previous state
     cached_f = expanduser(join(CONF, conf.file))
@@ -250,6 +250,8 @@ def sync_packages(pmconf, root_dir=REQUIREMENTS_ROOT_DIR):
     curr_list = []
     curr_f = expanduser(join(root_dir, conf.file))
     curr_list = check_file_and_get_package_list(curr_f)
+    if curr_list is None:
+        return 1
 
     # Diff: which are new, which are to be deleted ?
     to_install, to_delete = get_diff(cached_f_list, curr_list)
@@ -273,11 +275,12 @@ def sync_packages(pmconf, root_dir=REQUIREMENTS_ROOT_DIR):
             txt = "\tNothing to delete"
         print(txt)
 
-    # Run the package managers.
-    ret = run_package_manager(to_install, to_delete, pmconf)
-    if ret == 0:
-        #XXX check which of install or rm worked, write corresponding item in file.
-        copy_file(curr_f, cached_f)
+        # Run the package managers.
+        ret = run_package_manager(to_install, to_delete, pmconf)
+        if ret == 0:
+            #XXX check which of install or rm worked, write corresponding item in file.
+            print("copying cache of %s" % curr_list)
+            copy_file(curr_f, cached_f)
 
     return ret
 
@@ -336,13 +339,14 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
     CFG_FILE = "~/.syp/settings.py"
     cfg_file = expanduser(CFG_FILE)
 
+
     # Overwrite the default settings with the user's own.
     if os.path.isfile(cfg_file):
         with open(cfg_file, "rb") as fd:
             user_config = fd.read()
         exec_(user_config, globals(), locals())
 
-    root_dir = locals().get('REQUIREMENTS_ROOT_DIR')
+    root_dir = locals().get('REQUIREMENTS_ROOT_DIR') or ""
     req_files = REQUIREMENTS_FILES.items()
 
     # Deal with a specific package manager

@@ -3,7 +3,7 @@ tox:
 	tox
 
 test:
-	python -m unittest tests
+	pytest syp/
 
 install:
 	pip install -U pip

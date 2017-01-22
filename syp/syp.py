@@ -152,6 +152,8 @@ def filter_packages(lines):
     return packages
 
 def read_packages(conf_file, root_dir=""):
+    """Read file root_dir/conf_file and return a list of packages (str).
+    """
     conf_file = expanduser(os.path.join(root_dir, conf_file))
     lines = []
     if os.path.isfile(conf_file):
@@ -359,7 +361,7 @@ def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packag
         # Sync only the conf file of the current package manager.
         req_files = [tup for tup in req_files if tup[0] == pm]
         print("Let's use {} to install packages {} !".format(pm, " ".join(packages)))
-        conf_file = get_conf_file(pm)
+        conf_file = get_conf_file(pm)  # # TODO: to rm ?
         if not conf_file:
             exit(1)
         if editor:

@@ -8,7 +8,7 @@ setup(
     name = "syp",
     version = "0.1",
     packages = find_packages(),
-    scripts = ['syp.py', 'settings.py', 'README.org'],
+    scripts = ['syp/syp.py', 'syp/settings.py', 'README.org'],
 
     install_requires = [
         "termcolor", # colored print
@@ -36,7 +36,7 @@ setup(
 
     entry_points = {
         "console_scripts": [
-            "syp = syp:run",
+            "syp = syp.syp:run",
         ],
     },
 

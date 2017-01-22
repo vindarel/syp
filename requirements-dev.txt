@@ -1,3 +1,3 @@
 
 tox             # test in a venv, with many python versions
-mock            # mocking lib, for tests
+pytest

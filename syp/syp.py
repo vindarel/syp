@@ -38,14 +38,6 @@ from settings import REQUIREMENTS_FILES
 from settings import REQUIREMENTS_ROOT_DIR
 from settings import SYSTEM_PACMAN
 
-CFG_FILE = "~/.syp/settings.py"
-cfg_file = expanduser(CFG_FILE)
-
-# Overwrite the default settings with the user's own.
-with open(cfg_file, "rb") as fd:
-    user_config = fd.read()
-exec_(user_config, globals(), locals())
-
 
 def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
     """Copy the package listings to the conf cache.
@@ -321,8 +313,8 @@ def run_editor(root_dir, conf_file):
 
 # Command line arguments is quickly done with clize.
 @annotate(pm="p", message="m", dest="d", editor="e")
-@kwoargs("pm", "message", "dest", "rm", "editor", "init")
-def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packages):
+@kwoargs("pm", "message", "dest", "rm", "editor")
+def main(pm="", message="", dest="", rm=False, editor=False, *packages):
     """syp will check what's new in your config files, take the
     arguments into account, and it will install and remove packages
     accordingly. It uses a cache in ~/.syp/.
@@ -337,24 +329,21 @@ def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packag
 
     editor: call your shell's $EDITOR to edit the configuration file associated to the given package manager, before the rest.
 
-    init: write the default settings to ~/.syp/settings.py
-
     XXX: give a list of available pacman.
 
-    Check your settings in ~/syp/settings.py. Create them with syp --init.
+    Tweak your settings in ~/syp/settings.py.
     """
-    root_dir = REQUIREMENTS_ROOT_DIR
+    CFG_FILE = "~/.syp/settings.py"
+    cfg_file = expanduser(CFG_FILE)
+
+    # Overwrite the default settings with the user's own.
+    if os.path.isfile(cfg_file):
+        with open(cfg_file, "rb") as fd:
+            user_config = fd.read()
+        exec_(user_config, globals(), locals())
+
+    root_dir = locals().get('REQUIREMENTS_ROOT_DIR')
     req_files = REQUIREMENTS_FILES.items()
-
-    if init:
-        check_conf_dir("~/.syp/")
-        if not os.path.isfile(cfg_file):
-            copy_file("settings.py", cfg_file)
-            print("Copied settings into ~/.syp.")
-        else:
-            print("warning: the file {} already exists. Do nothing.".format(CFG_FILE))
-
-        exit(0)
 
     # Deal with a specific package manager
     if pm:

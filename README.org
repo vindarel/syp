@@ -26,7 +26,7 @@ the same  time, to check if  this list has been  edited manually (with
 packages added or removed) and  act accordingly (we make diffs against
 the cache at =~/.syp/apt.txt=).
 
-See the command =syp --init= and the Settings section below.
+See the Settings section below.
 
 Tested on python 2.7 and 3.4.
 
@@ -111,7 +111,8 @@ SYSTEM_PACMAN = "apt-get"
 
 - auto commit
 - auto-recognize a virtualenv ?
-- undo last action
 - allow for more than a requirement file for one package manager.
+- ask all and apply
+- more tests
 
   Bust most of all... use [[https://gnu.org/software/guix/][Guix]] !

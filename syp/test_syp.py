@@ -14,11 +14,13 @@ packages = ["one", "two"]
 def test_nominal(monkeypatch):
     def truthy(*args, **kwargs):
         return True
+    def nofile(*args, **kwargs):
+        return False
     def check_file_and_get_package_list_mock(afile, **kwargs):
         return packages
     monkeypatch.setattr(syp, "check_file_and_get_package_list", check_file_and_get_package_list_mock)
     monkeypatch.setattr(syp, "check_conf_dir", truthy)
-    monkeypatch.setattr(os.path, "isfile", truthy)
+    monkeypatch.setattr(os.path, "isfile", nofile)
     monkeypatch.setattr(syp, "write_packages", truthy)
 
     with pytest.raises(SystemExit):

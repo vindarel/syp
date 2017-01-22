@@ -40,7 +40,7 @@ setup(
 
     entry_points = {
         "console_scripts": [
-            "syp = syp.syp:run",
+            "syp = syp:run",
         ],
     },
 

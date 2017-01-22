@@ -1,4 +1,4 @@
-* Sync your packages with your dotfiles
+* Sync your packages with your dotfiles (and vice versa)
 
 When we use a package manager (be it apt, pip, npm,…), we want to sync
 the list of installed packages  in requirement files.  We then declare
@@ -13,7 +13,7 @@ REQUIREMENTS_FILES = {
         "install": "install -y --force-yes",
         "uninstall": "remove",
         },
-    # and so on for pip, pip3, gem, npm, etc
+    # and so on for pip, pip3, gem, npm, docker and guix.
 }
 #+END_SRC
 
@@ -72,7 +72,7 @@ We can *add a message* with =-m=. It will be appended on the same line:
 : syp --pm pip foo -m "foo is a cool package"
 
 
-We can *edit  the list* of packages for that  package maneger before the
+We can *edit  the list* of packages for that  package manager before the
 operations with =-e= (=--editor=):
 
 : syp --pm pip foo --rm -e
@@ -107,12 +107,11 @@ SYSTEM_PACMAN = "apt-get"
 
 * Develop
 : pip install -e .
-* TODOs and ideas
+* Todos and ideas
 
-- more tests
-- auto-recognize a virtualenv
-- undo last action
 - auto commit
+- auto-recognize a virtualenv ?
+- undo last action
 - allow for more than a requirement file for one package manager.
 
-  Bust most of all… use [[https://gnu.org/software/guix/][Guix]] !
+  Bust most of all... use [[https://gnu.org/software/guix/][Guix]] !

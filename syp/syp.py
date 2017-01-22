@@ -350,7 +350,7 @@ def main(pm="", message="", dest="", rm=False, editor=False, init=False, *packag
         check_conf_dir("~/.syp/")
         if not os.path.isfile(cfg_file):
             copy_file("settings.py", cfg_file)
-            print("Done.")
+            print("Copied settings into ~/.syp.")
         else:
             print("warning: the file {} already exists. Do nothing.".format(CFG_FILE))
 

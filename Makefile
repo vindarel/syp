@@ -1,3 +1,4 @@
+.PHONY: build
 
 tox:
 	tox
@@ -11,3 +12,10 @@ install:
 
 install-dev: install
 	pip install -r requirements-dev.txt
+
+build:
+	python setup.py bdist_egg
+	python setup.py sdist
+
+upload:
+	python setup.py sdist bdist_wheel upload

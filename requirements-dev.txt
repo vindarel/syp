@@ -1,3 +1,4 @@
 
 tox             # test in a venv, with many python versions
 pytest
+pypandoc        # convert org readme to md (for pypi)

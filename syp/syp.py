@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 import operator
 import os
 import shutil
+import signal
 import sys
 from builtins import input
 from functools import reduce
@@ -339,6 +340,10 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
     CFG_FILE = "~/.syp/settings.py"
     cfg_file = expanduser(CFG_FILE)
 
+    def signal_handler(signal, frame):
+            print('')
+            sys.exit(0)
+    signal.signal(signal.SIGINT, signal_handler)
 
     # Overwrite the default settings with the user's own.
     if os.path.isfile(cfg_file):

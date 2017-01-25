@@ -30,6 +30,10 @@ See the Settings section below.
 
 Tested on python 2.7 and 3.4.
 
+** Install
+
+: pip install syp
+
 ** Usage
 
 The basic usage  is to check all of the  package managers, and install

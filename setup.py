@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "syp",
-    version = "0.1.3",
+    version = "0.1.7",
     packages = find_packages(),
     scripts = ['syp/syp.py', 'syp/settings.py', 'README.org'],
 

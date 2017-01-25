@@ -40,7 +40,7 @@ from settings import REQUIREMENTS_ROOT_DIR
 from settings import SYSTEM_PACMAN
 
 
-def cache_init(req_file, root_dir=REQUIREMENTS_ROOT_DIR):
+def cache_init(req_file, root_dir=""):
     """Create the cache file for req_file. Don't copy its content yet.
 
     Create nested directories to mimic the dotfiles structure if needed.
@@ -351,8 +351,9 @@ def main(pm="", message="", dest="", rm=False, editor=False, *packages):
             user_config = fd.read()
         exec_(user_config, globals(), locals())
 
-    root_dir = locals().get('REQUIREMENTS_ROOT_DIR') or ""
-    req_files = REQUIREMENTS_FILES.items()
+    root_dir = locals().get('REQUIREMENTS_ROOT_DIR') or REQUIREMENTS_ROOT_DIR
+    requirements = locals().get('REQUIREMENTS_FILES') or REQUIREMENTS_FILES
+    req_files = requirements.items()
 
     # Deal with a specific package manager
     if pm:

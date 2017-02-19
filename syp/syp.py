@@ -280,7 +280,7 @@ def sync_packages(pmconf, root_dir=""):
         ret = run_package_manager(to_install, to_delete, pmconf)
         if ret == 0:
             #XXX check which of install or rm worked, write corresponding item in file.
-            print("copying cache of %s" % curr_list)
+            print("copying cache of %s" % conf.pacman)
             copy_file(curr_f, cached_f)
 
     return ret

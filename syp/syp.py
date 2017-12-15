@@ -270,7 +270,7 @@ def sync_packages(pmconf, root_dir=""):
             txt = "\tNothing to install"
         print(txt)
         if len(to_delete):
-            txt = "\tFound {} packages to delete: {}".format(len(to_delete), to_delete)
+            txt = "\tFound {} packages to delete: {}".format(len(to_delete), ", ".join(to_delete))
             txt = colored(txt, "red")
         else:
             txt = "\tNothing to delete"
